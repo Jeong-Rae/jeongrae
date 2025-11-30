@@ -2,31 +2,21 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { EmptyArticle } from "@/components/empty-article"
+import { isEmpty } from 'es-toolkit/compat'
+import type { ArticleMeta } from "@/lib/mdx/types"
 
 const ARTICLES_PER_PAGE = 10
 
-export type ArticleListItem = {
-  slug: string
-  title: string
-  summary?: string
-  date?: string
-  author?: string
-  thumbnail?: string
-}
-
 type ArticleListProps = {
-  articles: ArticleListItem[]
+  articles: ArticleMeta[]
 }
 
 export function ArticleList({ articles }: ArticleListProps) {
   const [currentPage, setCurrentPage] = useState(1)
 
-  if (!articles || articles.length === 0) {
-    return (
-      <div className="text-sm text-[#4e5968] py-8 border-t border-border">
-        아직 등록된 글이 없습니다.
-      </div>
-    )
+  if (isEmpty(articles)) {
+    return <EmptyArticle />
   }
 
   const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE)

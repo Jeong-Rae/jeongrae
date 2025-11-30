@@ -3,10 +3,10 @@ import { compileMDX } from 'next-mdx-remote/rsc';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import { findArticleMetaBySlug } from './articles';
-import type { ArticleFrontmatter, CompiledArticle } from './types';
+import type { ArticleFrontmatter, Article } from './types';
 import { mdxComponents } from './mdx-components';
 
-export async function getCompiledArticleBySlug(slug: string): Promise<CompiledArticle | null> {
+export async function getCompiledArticleBySlug(slug: string): Promise<Article | null> {
   const meta = findArticleMetaBySlug(slug);
   if (!meta) return null;
 
