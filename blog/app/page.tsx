@@ -7,7 +7,6 @@ import { PopularArticles } from "@/components/popular-articles"
 import { SeriesSection } from "@/components/series-section"
 import { getAllArticleMetas } from "@/lib/mdx/articles"
 
-// Home은 서버 컴포넌트 (use client 없음)
 export default function Home() {
   // MDX에서 메타 정보 읽어오기
   const metas = getAllArticleMetas()
@@ -19,6 +18,7 @@ export default function Home() {
     summary: meta.summary,      // frontmatter에 summary 있으면
     date: meta.date,
     author: meta.author,        // 필요 없으면 빼도 됨
+    thumbnail: meta.thumbnail,  // 썸네일 이미지
   }))
 
   return (

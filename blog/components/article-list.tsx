@@ -12,7 +12,7 @@ export type ArticleListItem = {
   summary?: string
   date?: string
   author?: string
-  image?: string
+  thumbnail?: string
 }
 
 type ArticleListProps = {
@@ -61,7 +61,7 @@ export function ArticleList({ articles }: ArticleListProps) {
             </div>
             <div className="flex-shrink-0 w-[130px] h-[90px] rounded-lg overflow-hidden">
               <img
-                src={article.image || "/placeholder.svg?height=90&width=130"}
+                src={article.thumbnail || "/placeholder.svg?height=90&width=130"}
                 alt={article.title}
                 className="w-full h-full object-cover"
               />

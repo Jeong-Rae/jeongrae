@@ -15,7 +15,7 @@ const seriesList = [
       "에러 처리와 테스트 코드",
     ],
     episodeCount: "챕터 17",
-    image: "/clean-code-icon.jpg",
+    thumbnail: "/clean-code-icon.jpg",
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ const seriesList = [
       "대규모 프로젝트에서의 확장성",
     ],
     episodeCount: "챕터 34",
-    image: "/clean-architecture-icon.jpg",
+    thumbnail: "/clean-architecture-icon.jpg",
   },
 ]
 
@@ -61,7 +61,7 @@ function SeriesCard({ series }: { series: (typeof seriesList)[0] }) {
       <div className="p-4">
         <div className="flex flex-row-reverse gap-4">
           <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-            <img src={series.image || "/placeholder.svg"} alt={series.title} className="h-full w-full object-cover" />
+            <img src={series.thumbnail || "/placeholder.svg"} alt={series.title} className="h-full w-full object-cover" />
           </div>
           <div className="flex-1">
             <h4 className="font-bold text-sm mb-1">{series.title}</h4>

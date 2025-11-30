@@ -1,14 +1,13 @@
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { BlogHeader } from "@/components/blog-header";
 import { ArticleContent } from "@/components/article-content";
 import { RelatedSeries } from "@/components/related-series";
-import { notFound } from "next/navigation";
 import { getAllArticleMetas } from "@/lib/mdx/articles";
 import { getCompiledArticleBySlug } from "@/lib/mdx/compile";
 
-type ArticlePageProps = {
-  params: {
-    slug: string;
-  };
+type PageProps = {
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
@@ -18,9 +17,15 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: ArticlePageProps) {
-  const article = await getCompiledArticleBySlug(params.slug);
-  if (!article) return {};
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params
+
+  const article = await getCompiledArticleBySlug(slug)
+  if (!article) {
+    return {}
+  }
 
   return {
     title: article.meta.title,
@@ -32,14 +37,16 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   };
 }
 
-export default async function ArticlePage({ params }: ArticlePageProps) {
-  const article = await getCompiledArticleBySlug(params.slug);
+export default async function ArticlePage({ params }: PageProps) {
+  const { slug } = await params
+
+  const article = await getCompiledArticleBySlug(slug)
 
   if (!article) {
-    notFound();
+    notFound()
   }
 
-  const { meta, content } = article;
+  const { meta, content } = article
 
   const relatedSeries: Array<unknown> = [];
 

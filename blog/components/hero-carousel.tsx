@@ -8,17 +8,17 @@ const carouselItems = [
   {
     id: 1,
     title: "TechBlog",
-    image: "/tech-blog-hero-banner-with-floating-3d-icons.jpg",
+    thumbnail: "/tech-blog-hero-banner-with-floating-3d-icons.jpg",
   },
   {
     id: 2,
     title: "혁신적인 기술 이야기",
-    image: "/innovative-technology-banner-with-gradients.jpg",
+    thumbnail: "/innovative-technology-banner-with-gradients.jpg",
   },
   {
     id: 3,
     title: "개발자의 성장",
-    image: "/developer-growth-journey-banner.jpg",
+    thumbnail: "/developer-growth-journey-banner.jpg",
   },
 ]
 
@@ -52,7 +52,7 @@ export function HeroCarousel() {
           >
             <div className="relative h-full w-full flex items-center justify-center">
               <img
-                src={item.image || "/placeholder.svg"}
+                src={item.thumbnail || "/placeholder.svg"}
                 alt={item.title}
                 className="absolute inset-0 h-full w-full object-cover"
               />
