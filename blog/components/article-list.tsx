@@ -1,4 +1,3 @@
-// components/article-list.tsx
 "use client"
 
 import { useState } from "react"
