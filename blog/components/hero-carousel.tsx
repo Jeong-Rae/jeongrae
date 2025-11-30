@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useCircleIndexNavigator } from "@/hook/useIndexNavigator"
 
 const carouselItems = [
   {
@@ -23,22 +24,22 @@ const carouselItems = [
 ]
 
 export function HeroCarousel() {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const {
+    index: currentIndex,
+    goNext,
+    goPrev,
+    setIndex,
+  } = useCircleIndexNavigator({
+    length: carouselItems.length,
+    initialIndex: 0,
+  })
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % carouselItems.length)
+      goNext()
     }, 5000)
     return () => clearInterval(timer)
-  }, [])
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + carouselItems.length) % carouselItems.length)
-  }
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % carouselItems.length)
-  }
+  }, [goNext])
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl bg-[var(--color-hero)] h-[300px]">
@@ -56,7 +57,9 @@ export function HeroCarousel() {
                 alt={item.title}
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <h2 className="relative z-10 font-bold text-hero-foreground text-4xl drop-shadow-lg">{item.title}</h2>
+              <h2 className="relative z-10 font-bold text-hero-foreground text-4xl drop-shadow-lg">
+                {item.title}
+              </h2>
             </div>
           </div>
         ))}
@@ -66,7 +69,7 @@ export function HeroCarousel() {
         variant="ghost"
         size="icon"
         className="absolute top-1/2 left-4 -translate-y-1/2 bg-background/80 hover:bg-background"
-        onClick={goToPrevious}
+        onClick={goPrev}
       >
         <ChevronLeft className="h-5 w-5" />
         <span className="sr-only">이전</span>
@@ -76,7 +79,7 @@ export function HeroCarousel() {
         variant="ghost"
         size="icon"
         className="absolute top-1/2 right-4 -translate-y-1/2 bg-background/80 hover:bg-background"
-        onClick={goToNext}
+        onClick={goNext}
       >
         <ChevronRight className="h-5 w-5" />
         <span className="sr-only">다음</span>
@@ -89,7 +92,7 @@ export function HeroCarousel() {
             className={`h-2 w-2 rounded-full transition-all ${
               index === currentIndex ? "w-8 bg-hero-foreground" : "bg-hero-foreground/50"
             }`}
-            onClick={() => setCurrentIndex(index)}
+            onClick={() => setIndex(index)}
           />
         ))}
       </div>

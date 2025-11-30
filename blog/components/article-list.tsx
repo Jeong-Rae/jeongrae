@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { EmptyArticle } from "@/components/empty-article"
-import { isEmpty } from 'es-toolkit/compat'
+import { isEmpty } from "es-toolkit/compat"
 import type { ArticleMeta } from "@/lib/mdx/types"
+import { useRangeIndexNavigator } from "@/hook/useIndexNavigator"
 
 const ARTICLES_PER_PAGE = 10
 
@@ -13,14 +13,25 @@ type ArticleListProps = {
 }
 
 export function ArticleList({ articles }: ArticleListProps) {
-  const [currentPage, setCurrentPage] = useState(1)
+  const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE)
+
+  const {
+    index: pageIndex,
+    goNext,
+    goPrev,
+    setIndex,
+    canGoNext,
+    canGoPrev,
+  } = useRangeIndexNavigator({
+    length: Math.max(totalPages, 1),
+    initialIndex: 0,
+  })
 
   if (isEmpty(articles)) {
     return <EmptyArticle />
   }
 
-  const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE)
-  const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE
+  const startIndex = pageIndex * ARTICLES_PER_PAGE
   const endIndex = startIndex + ARTICLES_PER_PAGE
   const currentArticles = articles.slice(startIndex, endIndex)
 
@@ -64,27 +75,34 @@ export function ArticleList({ articles }: ArticleListProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
+            onClick={goPrev}
+            disabled={!canGoPrev}
           >
             이전
           </Button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentPage(page)}
-              className="min-w-[40px]"
-            >
-              {page}
-            </Button>
-          ))}
+
+          {Array.from({ length: totalPages }, (_, i) => {
+            const pageNumber = i + 1
+            const isActive = pageIndex === i
+
+            return (
+              <Button
+                key={pageNumber}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIndex(i)}
+                className="min-w-[40px]"
+              >
+                {pageNumber}
+              </Button>
+            )
+          })}
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
+            onClick={goNext}
+            disabled={!canGoNext}
           >
             다음
           </Button>
