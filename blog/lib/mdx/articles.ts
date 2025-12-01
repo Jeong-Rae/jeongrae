@@ -2,6 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
+import { orderBy } from 'es-toolkit';
+import { clamp } from '@lyght/ts';
 import { slugify } from './slug'
 import type { ArticleMeta, ArticleFrontmatter } from './types';
 
@@ -33,4 +35,43 @@ export function getAllArticleMetas(): ArticleMeta[] {
 export function findArticleMetaBySlug(slug: string): ArticleMeta | null {
   const metas = getAllArticleMetas();
   return metas.find((meta) => meta.slug === slug) ?? null;
+}
+
+type PaginatedResult = {
+  articles: ArticleMeta[];
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+};
+
+export function getPaginatedArticles(
+  pageParam?: string,
+  articlesPerPage = 10,
+): PaginatedResult {
+  const rawPage = Number(pageParam) || 1;
+  const metas = getAllArticleMetas();
+
+  const sortedArticles = orderBy(
+    metas,
+    [(item) => (item.date ? new Date(item.date).getTime() : 0)],
+    ['desc'],
+  );
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedArticles.length / articlesPerPage),
+  );
+
+  const currentPage = clamp(rawPage, 1, totalPages);
+
+  const startIndex = (currentPage - 1) * articlesPerPage;
+  const endIndex = startIndex + articlesPerPage;
+  const articles = sortedArticles.slice(startIndex, endIndex);
+
+  return {
+    articles,
+    currentPage,
+    totalPages,
+    totalCount: sortedArticles.length,
+  };
 }
