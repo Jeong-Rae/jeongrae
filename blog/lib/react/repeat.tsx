@@ -19,20 +19,16 @@ import React from "react";
  *
  */
 export type RepeatTimesProps = {
-    /** 반복 횟수  
-     * - 0이하인 경우 렌더링되지 않음 */
-    times: number;
-    children: (index: number) => React.ReactNode;
+	/** 반복 횟수
+	 * - 0이하인 경우 렌더링되지 않음 */
+	times: number;
+	children: (index: number) => React.ReactNode;
 };
 
 export function RepeatTimes({ times = 0, children }: RepeatTimesProps) {
-    if (times <= 0) return null;
+	if (times <= 0) return null;
 
-    return (
-        <>
-            {Array.from({ length: times }, (_, index) => children(index))}
-        </>
-    );
+	return <>{Array.from({ length: times }, (_, index) => children(index))}</>;
 }
 
 /**
@@ -51,28 +47,24 @@ export function RepeatTimes({ times = 0, children }: RepeatTimesProps) {
  * ```
  */
 export type RepeatEachProps<T> = {
-    /** 반복할 배열 */
-    each: T[];
-    children: (item: T, index: number) => React.ReactNode;
+	/** 반복할 배열 */
+	each: T[];
+	children: (item: T, index: number) => React.ReactNode;
 };
 
 /** 배열 기반 반복 렌더링 */
 export function RepeatEach<T>({ each = [], children }: RepeatEachProps<T>) {
-    if (!each || each.length === 0) return null;
+	if (!each || each.length === 0) return null;
 
-    return (
-        <>
-            {each.map((item, index) => children(item, index))}
-        </>
-    );
+	return <>{each.map((item, index) => children(item, index))}</>;
 }
 
 /**
- * 
+ *
  * - `Repeat.Times` : 정수 기반 반복
  * - `Repeat.Each`  : 배열 기반 반복
  */
 export const Repeat = {
-    Times: RepeatTimes,
-    Each: RepeatEach,
+	Times: RepeatTimes,
+	Each: RepeatEach,
 } as const;

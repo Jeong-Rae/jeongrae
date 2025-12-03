@@ -4,12 +4,12 @@ import type { ReactElement } from "react";
  * .mdx 파일의 frontmatter 정보
  */
 export type ArticleFrontmatter = {
-  title: string;
-  summary: string;
-  date: string;
-  author?: string;
-  thumbnail?: string;
-  tags?: string[];
+	title: string;
+	summary: string;
+	date: string;
+	author?: string;
+	thumbnail?: string;
+	tags?: string[];
 };
 
 /**
@@ -17,8 +17,8 @@ export type ArticleFrontmatter = {
  * 목록, 상세 페이지 메타데이터 표시에 사용
  */
 export type ArticleMeta = ArticleFrontmatter & {
-  slug: string;
-  filePath: string;
+	slug: string;
+	filePath: string;
 };
 
 /**
@@ -26,6 +26,6 @@ export type ArticleMeta = ArticleFrontmatter & {
  * 상세 페이지에서 Article 콘텐츠를 렌더링할 때 사용
  */
 export type Article = {
-  meta: ArticleMeta;
-  content: ReactElement;
+	meta: ArticleMeta;
+	content: ReactElement;
 };
