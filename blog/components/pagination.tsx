@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
 import { Repeat } from "@/lib/react/repeat";
 
 type PaginationProps = {
@@ -19,9 +18,14 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
 
   return (
     <div className="flex justify-center items-center gap-2 mt-8 pt-8 border-t border-border">
-      <Button asChild variant="outline" size="sm" disabled={!canGoPrev}>
-        <Link href={canGoPrev ? makeHref(currentPage - 1) : "#"}>이전</Link>
-      </Button>
+      <ButtonLink
+        variant="outline"
+        size="sm"
+        disabled={!canGoPrev}
+        href={canGoPrev ? makeHref(currentPage - 1) : undefined}
+      >
+        이전
+      </ButtonLink>
 
       <Repeat.Times times={totalPages}>
         {(i) => {
@@ -29,22 +33,27 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           const isActive = currentPage === pageNumber;
 
           return (
-            <Button
+            <ButtonLink
               key={pageNumber}
-              asChild
+              href={makeHref(pageNumber)}
               variant={isActive ? "default" : "outline"}
               size="sm"
               className="min-w-[40px]"
             >
-              <Link href={makeHref(pageNumber)}>{pageNumber}</Link>
-            </Button>
+              {pageNumber}
+            </ButtonLink>
           );
         }}
       </Repeat.Times>
 
-      <Button asChild variant="outline" size="sm" disabled={!canGoNext}>
-        <Link href={canGoNext ? makeHref(currentPage + 1) : "#"}>다음</Link>
-      </Button>
+      <ButtonLink
+        variant="outline"
+        size="sm"
+        disabled={!canGoNext}
+        href={canGoNext ? makeHref(currentPage + 1) : undefined}
+      >
+        다음
+      </ButtonLink>
     </div>
   );
 }
