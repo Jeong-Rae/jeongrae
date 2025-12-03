@@ -6,6 +6,7 @@ import { PopularArticles } from "@/components/popular-articles"
 import { SeriesSection } from "@/components/series-section"
 import { Pagination } from "@/components/pagination"
 import { getPaginatedArticles } from "@/lib/mdx/articles"
+import { getQueryParam } from "@/lib/url"
 
 const ARTICLES_PER_PAGE = 5
 
@@ -19,9 +20,7 @@ type HomeProps = {
 export default async function Home({ searchParams }: HomeProps) {
   const resolved = await searchParams
 
-  const pageParam = Array.isArray(resolved.page)
-    ? resolved.page[0]
-    : resolved.page
+  const pageParam = getQueryParam(resolved.page, "number") ?? 1;
 
   const { articles: currentArticles, currentPage, totalPages } = getPaginatedArticles(
     pageParam,

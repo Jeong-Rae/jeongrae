@@ -44,10 +44,9 @@ type PaginatedResult = {
 };
 
 export function getPaginatedArticles(
-  pageParam?: string,
+  page: number = 1,
   articlesPerPage = 10,
 ): PaginatedResult {
-  const rawPage = Number(pageParam) || 1;
   const metas = getAllArticleMetas();
 
   const sortedArticles = orderBy(
@@ -56,12 +55,9 @@ export function getPaginatedArticles(
     ['desc'],
   );
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(sortedArticles.length / articlesPerPage),
-  );
+  const totalPages = Math.max(1, Math.ceil(sortedArticles.length / articlesPerPage));
 
-  const currentPage = clamp(rawPage, 1, totalPages);
+  const currentPage = clamp(page, 1, totalPages);
 
   const startIndex = (currentPage - 1) * articlesPerPage;
   const endIndex = startIndex + articlesPerPage;
