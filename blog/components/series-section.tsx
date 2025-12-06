@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Repeat } from "@/lib/react/repeat";
 
 const seriesList = [
   {
@@ -39,9 +40,9 @@ export function SeriesSection() {
     <div>
       <h3 className="font-bold text-lg mb-4">이달의 시리즈</h3>
       <div className="space-y-4">
-        {seriesList.map((series) => (
-          <SeriesCard key={series.id} series={series} />
-        ))}
+        <Repeat.Each each={seriesList}>
+          {(series) => <SeriesCard series={series} />}
+        </Repeat.Each>
       </div>
     </div>
   );

@@ -1,10 +1,32 @@
-import React from "react";
+import { isString } from "es-toolkit";
+import { hasIn, isNumber, isObject } from "es-toolkit/compat";
+import { cloneElement, Fragment, isValidElement, Key, ReactNode } from "react";
 
-/**
- * @remarks
- * 현재 key 관리는 호출 측에서 수행한다.
- * 추후 `keySelector` 등 key 생성 전략을 내부에서 처리하는 기능을 추가할 수 있다.
- */
+function resolveKey<T>(
+  item: T,
+  index: number,
+  itemKey?: (item: T, index: number) => Key,
+): Key {
+  if (itemKey) return itemKey(item, index);
+
+  if (isObject(item) && hasIn(item, "id")) {
+    const id = (item as any).id;
+    if (isString(id) || isNumber(id)) {
+      return id;
+    }
+  }
+
+  return index;
+}
+
+function applyIndexProp(
+  node: ReactNode,
+  index: number,
+  indexProp?: string,
+): ReactNode {
+  if (!indexProp || !isValidElement(node)) return node;
+  return cloneElement(node, { [indexProp]: index });
+}
 
 /**
  * 반복 렌더링 컴포넌트
@@ -13,7 +35,7 @@ import React from "react";
  * @example
  * ```tsx
  * <Repeat.Times times={10}>
- *   {(index) => <Component key={index} />}
+ *   {(index) => <Component order={index} />}
  * </Repeat.Times>
  * ```
  *
@@ -22,13 +44,22 @@ export type RepeatTimesProps = {
   /** 반복 횟수
    * - 0이하인 경우 렌더링되지 않음 */
   times: number;
-  children: (index: number) => React.ReactNode;
+  children: (index: number) => ReactNode;
+  indexProp?: string;
 };
 
-export function RepeatTimes({ times = 0, children }: RepeatTimesProps) {
+export function RepeatTimes({ times = 0, children, indexProp }: RepeatTimesProps) {
   if (times <= 0) return null;
 
-  return <>{Array.from({ length: times }, (_, index) => children(index))}</>;
+  return (
+    <>
+      {Array.from({ length: times }, (_, index) => (
+        <Fragment key={index}>
+          {applyIndexProp(children(index), index, indexProp)}
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
 /**
@@ -42,21 +73,36 @@ export function RepeatTimes({ times = 0, children }: RepeatTimesProps) {
  * const users = [{ id: "u1" }, { id: "u2" }];
  *
  * <Repeat.Each each={users}>
- *   {(user, index) => <Component key={user.id} user={user} />}
+ *   {(user) => <Component user={user} />}
  * </Repeat.Each>
  * ```
  */
 export type RepeatEachProps<T> = {
   /** 반복할 배열 */
   each: T[];
-  children: (item: T, index: number) => React.ReactNode;
+  children: (item: T, index: number) => ReactNode;
+  /** key 결정 전략
+   * - 있으면: 이 함수로 key 생성
+   * - 없으면: item.id가 있으면 id 사용
+   * - 둘 다 아니면: index 사용
+   */
+  itemKey?: (item: T, index: number) => Key;
+  indexProp?: string;
 };
 
 /** 배열 기반 반복 렌더링 */
-export function RepeatEach<T>({ each = [], children }: RepeatEachProps<T>) {
+export function RepeatEach<T>({ each = [], children, itemKey, indexProp }: RepeatEachProps<T>) {
   if (!each || each.length === 0) return null;
 
-  return <>{each.map((item, index) => children(item, index))}</>;
+  return (
+    <>
+      {each.map((item, index) => (
+        <Fragment key={resolveKey(item, index, itemKey)}>
+          {applyIndexProp(children(item, index), index, indexProp)}
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
 /**
