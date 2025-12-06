@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { BlogHeader } from "@/components/blog-header";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -38,7 +39,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`font-sans antialiased`}>
-        {children}
+        <div className="min-h-screen">
+          <BlogHeader />
+          <main className="container mx-auto max-w-6xl px-4 py-8">
+            {children}
+          </main>
+        </div>
         <Analytics />
       </body>
     </html>

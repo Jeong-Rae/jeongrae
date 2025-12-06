@@ -1,4 +1,3 @@
-import { BlogHeader } from "@/components/blog-header";
 import { HeroCarousel } from "@/components/hero-carousel";
 import { ArticleTabs } from "@/components/article-tabs";
 import { ArticleList } from "@/components/article-list";
@@ -28,35 +27,31 @@ export default async function Home({ searchParams }: HomeProps) {
   } = getPaginatedArticles(pageParam, ARTICLES_PER_PAGE);
 
   return (
-    <div className="min-h-screen">
-      <BlogHeader />
+    <div className="space-y-8">
+      {/* Hero Carousel */}
+      <div className="mb-8">
+        <HeroCarousel />
+      </div>
 
-      <main className="container mx-auto max-w-6xl px-4 py-8">
-        {/* Hero Carousel */}
-        <div className="mb-8">
-          <HeroCarousel />
+      {/* Article Tabs */}
+      <div className="mb-8">
+        <ArticleTabs />
+      </div>
+
+      {/* Main Content Grid: Articles + Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
+        {/* Left: Article List + Pagination */}
+        <div>
+          <ArticleList articles={currentArticles} />
+          <Pagination currentPage={currentPage} totalPages={totalPages} />
         </div>
 
-        {/* Article Tabs */}
-        <div className="mb-8">
-          <ArticleTabs />
+        {/* Right: Sidebar with Popular & Series */}
+        <div className="space-y-8">
+          <PopularArticles />
+          <SeriesSection />
         </div>
-
-        {/* Main Content Grid: Articles + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
-          {/* Left: Article List + Pagination */}
-          <div>
-            <ArticleList articles={currentArticles} />
-            <Pagination currentPage={currentPage} totalPages={totalPages} />
-          </div>
-
-          {/* Right: Sidebar with Popular & Series */}
-          <div className="space-y-8">
-            <PopularArticles />
-            <SeriesSection />
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
