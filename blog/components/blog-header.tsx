@@ -14,29 +14,10 @@ export function BlogHeader() {
           <span className="font-bold text-xl">TechBlog</span>
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link
-            href="/slash"
-            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            SLASH
-          </Link>
-          <Link
-            href="/simplicity"
-            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            SIMPLICITY
-          </Link>
-        </nav>
-
         {/* Actions */}
         <div className="flex items-center gap-3">
           <Button variant="default" size="sm">
-            구독하기
-          </Button>
-          <Button variant="ghost" size="sm">
-            채용 바로가기
+            Github 바로가기
           </Button>
           <Button variant="ghost" size="icon">
             <Search className="h-4 w-4" />

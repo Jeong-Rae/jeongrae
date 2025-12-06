@@ -8,19 +8,12 @@ import { useCircleIndexNavigator } from "@/hook/useIndexNavigator";
 const carouselItems = [
   {
     id: 1,
-    title: "TechBlog",
-    thumbnail: "/tech-blog-hero-banner-with-floating-3d-icons.jpg",
+    title: "Do one thing well.",
   },
   {
     id: 2,
-    title: "혁신적인 기술 이야기",
-    thumbnail: "/innovative-technology-banner-with-gradients.jpg",
-  },
-  {
-    id: 3,
-    title: "개발자의 성장",
-    thumbnail: "/developer-growth-journey-banner.jpg",
-  },
+    title: "There is no success\nwithout failure"
+  }
 ];
 
 export function HeroCarousel() {
@@ -53,7 +46,7 @@ export function HeroCarousel() {
           >
             <div className="relative h-full w-full flex items-center justify-center">
               <img
-                src={item.thumbnail || "/placeholder.svg"}
+                src={"/placeholder.svg"}
                 alt={item.title}
                 className="absolute inset-0 h-full w-full object-cover"
               />
