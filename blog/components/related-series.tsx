@@ -24,7 +24,7 @@ export function RelatedSeries({ articles }: { articles: ArticleMeta[] }) {
                 </p>
               </div>
               <div className="text-xs leading-[1.6] text-[#4e5968] mt-3">
-                {article.date} {article.author && `· ${article.author}`}
+                {article.uploadAt} {article.author && `· ${article.author}`}
               </div>
             </div>
             <div className="flex-shrink-0 w-[130px] h-[90px] rounded-lg overflow-hidden">

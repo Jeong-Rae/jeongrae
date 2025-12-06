@@ -6,7 +6,7 @@ import type { ReactElement } from "react";
 export type ArticleFrontmatter = {
   title: string;
   summary: string;
-  date: string;
+  uploadAt: string;
   author?: string;
   thumbnail?: string;
   tags?: string[];

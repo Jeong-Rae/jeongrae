@@ -62,8 +62,8 @@ export default async function ArticlePage({ params }: PageProps) {
             </h1>
             <div className="flex items-center justify-center gap-2 text-[#4e5968]">
               <span className="text-base">{meta.author ?? ""}</span>
-              {meta.author && meta.date && <span>·</span>}
-              <span className="text-base">{meta.date ?? ""}</span>
+              {meta.author && meta.uploadAt && <span>·</span>}
+              <span className="text-base">{meta.uploadAt ?? ""}</span>
             </div>
           </header>
 

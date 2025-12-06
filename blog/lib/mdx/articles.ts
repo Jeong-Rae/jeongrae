@@ -60,7 +60,7 @@ export function getPaginatedArticles(
 
   const sortedArticles = orderBy(
     metas,
-    [(item) => (item.date ? new Date(item.date).getTime() : 0)],
+    [(item) => (item.uploadAt ? new Date(item.uploadAt).getTime() : 0)],
     ["desc"],
   );
 
