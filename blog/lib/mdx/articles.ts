@@ -3,12 +3,14 @@ import path from "node:path";
 import matter from "gray-matter";
 import { orderBy } from "es-toolkit";
 import { clamp } from "@lyght/ts";
-import { slugify } from "./slug";
+import { slugify, resetSlugger } from "./slug";
 import type { ArticleMeta, ArticleFrontmatter } from "./types";
 
 const ARTICLES_PATH = path.join(process.cwd(), "content", "articles");
 
 export function getAllArticleMetas(): ArticleMeta[] {
+  resetSlugger();
+
   const files = fs
     .readdirSync(ARTICLES_PATH)
     .filter((file) => file.endsWith(".mdx"));
@@ -37,7 +39,10 @@ export function getAllArticleMetas(): ArticleMeta[] {
 
 export function findArticleMetaBySlug(slug: string): ArticleMeta | null {
   const metas = getAllArticleMetas();
-  return metas.find((meta) => meta.slug === slug) ?? null;
+
+  const target = decodeURIComponent(slug);
+
+  return metas.find((meta) => meta.slug === target) ?? null;
 }
 
 type PaginatedResult = {

@@ -12,6 +12,7 @@ export function ArticleList({ articles }: ArticleListProps) {
   if (isEmpty(articles)) {
     return <EmptyArticle />;
   }
+  console.log(articles);
 
   return (
     <div className="space-y-6">

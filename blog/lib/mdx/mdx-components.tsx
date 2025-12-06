@@ -1,22 +1,36 @@
 import type { ComponentProps } from "react";
 import type { MDXComponents } from "mdx/types";
 
+import {
+  TypographyH1,
+  TypographyH2,
+  TypographyH3,
+  TypographyH4,
+  TypographyP,
+  TypographyBlockquote,
+  TypographyList,
+  TypographyLead,
+  TypographyLarge,
+  TypographySmall,
+  TypographyMuted,
+} from "@/components/ui/typography";
+
 export const mdxComponents = {
-  h1: (props: ComponentProps<"h1">) => <h1 {...props} />,
-  h2: (props: ComponentProps<"h2">) => <h2 {...props} />,
-  p: (props: ComponentProps<"p">) => (
-    <p {...props} className="text-[17px] leading-[1.8] text-[#4e5968] mb-6" />
-  ),
+  h1: (props: ComponentProps<"h1">) => <TypographyH1 {...props} />,
+  h2: (props: ComponentProps<"h2">) => <TypographyH2 {...props} />,
+  h3: (props: ComponentProps<"h3">) => <TypographyH3 {...props} />,
+  h4: (props: ComponentProps<"h4">) => <TypographyH4 {...props} />,
+  p: (props: ComponentProps<"p">) => <TypographyP {...props} />,
   blockquote: (props: ComponentProps<"blockquote">) => (
-    <blockquote
-      {...props}
-      className="border-l-4 border-[#3182f6] pl-6 py-2 my-8 bg-transparent [&>p]:text-[17px] [&>p]:leading-[1.8] [&>p]:text-[#4e5968]"
-    />
+    <TypographyBlockquote {...props} />
   ),
+  ul: (props: ComponentProps<"ul">) => <TypographyList {...props} />,
+  li: (props: ComponentProps<"li">) => <li {...props} />,
 };
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
+    ...mdxComponents,
     ...components,
   };
 }
