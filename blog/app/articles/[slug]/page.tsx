@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BlogHeader } from "@/components/blog-header";
 import { ArticleContent } from "@/components/article-content";
 import { RelatedSeries } from "@/components/related-series";
 import { getAllArticleMetas } from "@/lib/mdx/articles";
@@ -52,8 +51,6 @@ export default async function ArticlePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen">
-      <BlogHeader />
-
       <main className="container mx-auto max-w-3xl px-4 py-12">
         <article>
           <header className="mb-12 text-center">
