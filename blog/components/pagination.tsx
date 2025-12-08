@@ -1,6 +1,13 @@
 "use client";
 
-import { ButtonLink } from "@/components/ui/button-link";
+import {
+  Pagination as PaginationRoot,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Repeat } from "@/lib/react/repeat";
 
 type PaginationProps = {
@@ -17,43 +24,45 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   const canGoNext = currentPage < totalPages;
 
   return (
-    <div className="flex justify-center items-center gap-2 mt-8 pt-8 border-t border-border">
-      <ButtonLink
-        variant="outline"
-        size="sm"
-        disabled={!canGoPrev}
-        href={canGoPrev ? makeHref(currentPage - 1) : undefined}
-      >
-        이전
-      </ButtonLink>
+    <PaginationRoot className="mt-8 items-center justify-center border-t border-border pt-8">
+      <PaginationContent className="flex-wrap justify-center gap-2">
+        <PaginationItem>
+          <PaginationPrevious
+            href={canGoPrev ? makeHref(currentPage - 1) : "#"}
+            isDisabled={!canGoPrev}
+          >
+            이전
+          </PaginationPrevious>
+        </PaginationItem>
 
-      <Repeat.Times times={totalPages}>
-        {(i) => {
-          const pageNumber = i + 1;
-          const isActive = currentPage === pageNumber;
+        <Repeat.Times times={totalPages}>
+          {(i) => {
+            const pageNumber = i + 1;
+            const isActive = currentPage === pageNumber;
 
-          return (
-            <ButtonLink
-              key={pageNumber}
-              href={makeHref(pageNumber)}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
-              className="min-w-[40px]"
-            >
-              {pageNumber}
-            </ButtonLink>
-          );
-        }}
-      </Repeat.Times>
+            return (
+              <PaginationItem key={pageNumber}>
+                <PaginationLink
+                  href={makeHref(pageNumber)}
+                  isActive={isActive}
+                  size="sm"
+                >
+                  {pageNumber}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }}
+        </Repeat.Times>
 
-      <ButtonLink
-        variant="outline"
-        size="sm"
-        disabled={!canGoNext}
-        href={canGoNext ? makeHref(currentPage + 1) : undefined}
-      >
-        다음
-      </ButtonLink>
-    </div>
+        <PaginationItem>
+          <PaginationNext
+            href={canGoNext ? makeHref(currentPage + 1) : "#"}
+            isDisabled={!canGoNext}
+          >
+            다음
+          </PaginationNext>
+        </PaginationItem>
+      </PaginationContent>
+    </PaginationRoot>
   );
 }
