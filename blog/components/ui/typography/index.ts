@@ -5,7 +5,6 @@ import { TypographyH3 } from "./h3";
 import { TypographyH4 } from "./h4";
 import { TypographyH5 } from "./h5";
 import { TypographyH6 } from "./h6";
-import { TypographyImage } from "./image";
 import { TypographyInlineCode } from "./inline-code";
 import { TypographyLarge } from "./large";
 import { TypographyLead } from "./lead";
@@ -44,7 +43,6 @@ const Typography = {
   Tr: TypographyTr,
   Th: TypographyTh,
   Td: TypographyTd,
-  Image: TypographyImage,
   Link: TypographyLink,
 };
 
@@ -57,7 +55,6 @@ export {
   TypographyH4,
   TypographyH5,
   TypographyH6,
-  TypographyImage,
   TypographyInlineCode,
   TypographyLarge,
   TypographyLead,
