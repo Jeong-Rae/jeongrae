@@ -35,12 +35,15 @@ export function ArticleList({ articles }: ArticleListProps) {
                 )}
               </div>
               <div className="text-xs leading-[1.6] text-[#4e5968] mt-3">
-                {article.uploadAt ?? ""} {article.author && `· ${article.author}`}
+                {article.uploadAt ?? ""}{" "}
+                {article.author && `· ${article.author}`}
               </div>
             </div>
             <div className="flex-shrink-0 w-[130px] h-[90px] rounded-lg overflow-hidden">
               <img
-                src={article.thumbnail || "/placeholder.svg?height=90&width=130"}
+                src={
+                  article.thumbnail || "/placeholder.svg?height=90&width=130"
+                }
                 alt={article.title}
                 className="w-full h-full object-cover"
               />

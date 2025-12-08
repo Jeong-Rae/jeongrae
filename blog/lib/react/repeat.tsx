@@ -48,7 +48,11 @@ export type RepeatTimesProps = {
   indexProp?: string;
 };
 
-export function RepeatTimes({ times = 0, children, indexProp }: RepeatTimesProps) {
+export function RepeatTimes({
+  times = 0,
+  children,
+  indexProp,
+}: RepeatTimesProps) {
   if (times <= 0) return null;
 
   return (
@@ -91,7 +95,12 @@ export type RepeatEachProps<T> = {
 };
 
 /** 배열 기반 반복 렌더링 */
-export function RepeatEach<T>({ each = [], children, itemKey, indexProp }: RepeatEachProps<T>) {
+export function RepeatEach<T>({
+  each = [],
+  children,
+  itemKey,
+  indexProp,
+}: RepeatEachProps<T>) {
   if (!each || each.length === 0) return null;
 
   return (
