@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/typography";
 
 export const mdxComponents: MDXComponents = {
-  h1: TypographyH1,
-  h2: TypographyH2,
+  h1: (props) => <TypographyH1 {...props} withBorder={false} />,
+  h2: (props) => <TypographyH2 {...props} withBorder={false} />,
   h3: TypographyH3,
   h4: TypographyH4,
   h5: TypographyH5,

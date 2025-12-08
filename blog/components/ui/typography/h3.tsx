@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function TypographyH3({ children }: { children: ReactNode }) {
   return (
-    <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight text-foreground">
+    <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight text-foreground mt-8 mb-4">
       {children}
     </h3>
   );
