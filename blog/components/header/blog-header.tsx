@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import Image from "next/image";
+import { ButtonLink } from "../ui/button-link";
 
 export function BlogHeader() {
   return (
@@ -16,9 +18,26 @@ export function BlogHeader() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Button variant="default" size="sm">
-            Github 바로가기
-          </Button>
+          <ButtonLink
+            href="https://github.com/Jeong-Rae"
+            size="sm"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-[#24292e] hover:bg-[#1f2428] text-white"
+          >
+            <Image
+              src="/github-mark-white.svg"
+              alt="GitHub"
+              width={16}
+              height={16}
+            />
+            <Image
+              src="/github-logo-white.png"
+              alt="GitHub"
+              width={16}
+              height={32}
+            />
+          </ButtonLink>
+
           <Button variant="ghost" size="icon">
             <Search className="h-4 w-4" />
             <span className="sr-only">검색</span>
