@@ -9,9 +9,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TechBlog - 기술 블로그",
-  description: "혁신적인 기술과 개발 인사이트를 공유합니다",
-  generator: "v0.app",
+  title: "Jeongrae's Blog",
+  description: "개인적으로 경험한 고민과 경험을 정리하고 공유합니다.",
+  generator: "v0.app, codex, jeongrae",
   icons: {
     icon: [
       {

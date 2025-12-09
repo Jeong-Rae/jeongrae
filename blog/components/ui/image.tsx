@@ -22,7 +22,7 @@ export function Image({
   ...props
 }: CustomImageProps) {
   return (
-    <figure className="my-8 flex flex-col items-center justify-center">
+    <figure className="flex flex-col items-center justify-center">
       <NextImage
         src={src}
         alt={alt}

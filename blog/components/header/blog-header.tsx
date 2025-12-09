@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import Image from "next/image";
-import { ButtonLink } from "../ui/button-link";
 import { GithubButton } from "./github-button";
 
 export function BlogHeader() {
@@ -14,7 +12,7 @@ export function BlogHeader() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="font-bold text-primary-foreground text-lg">T</span>
           </div>
-          <span className="font-bold text-xl">TechBlog</span>
+          <span className="font-bold text-xl">Jeongrae</span>
         </Link>
 
         {/* Actions */}

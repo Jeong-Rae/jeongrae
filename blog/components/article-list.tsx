@@ -47,31 +47,31 @@ export function ArticleList({ articles }: ArticleListProps) {
             href={`/articles/${slug}`}
             className="group flex gap-6 py-6 border-b border-border last:border-0 hover:opacity-80 transition-opacity"
           >
-            <div className="flex-1 flex flex-col justify-between min-w-0">
-              <div className="space-y-2">
-                <h3 className="font-bold text-[20px] leading-[1.6] text-[#4e5968] group-hover:text-[#3182f6] transition-colors">
-                  {title}
-                </h3>
-                {summary && (
-                  <p className="text-sm leading-[1.6] text-[#4e5968]">
-                    {summary}
-                  </p>
-                )}
+              <div className="flex-1 flex flex-col justify-between min-w-0">
+                <div className="space-y-2">
+                  <h3 className="font-bold text-[20px] leading-[1.6] text-[#4e5968] group-hover:text-[#3182f6] transition-colors">
+                    {title}
+                  </h3>
+                  {summary && (
+                    <p className="text-sm leading-[1.6] text-[#4e5968]">
+                      {summary}
+                    </p>
+                  )}
+                </div>
+                <div className="text-xs leading-[1.6] text-[#4e5968] mt-3">
+                  {uploadAt} {author && `· ${author}`}
+                </div>
               </div>
-              <div className="text-xs leading-[1.6] text-[#4e5968] mt-3">
-                {uploadAt ?? ""} {author && `· ${author}`}
+              <div className="flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden">
+                <Image
+                  src={thumbnail}
+                  alt={title}
+                  width={130}
+                  height={130}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
-            <div className="flex-shrink-0 w-[130px] h-[90px] rounded-lg overflow-hidden">
-              <Image
-                src={thumbnail}
-                alt={title}
-                width={130}
-                height={130}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </a>
+            </a>
         )}
       </Repeat.Each>
     </div>
