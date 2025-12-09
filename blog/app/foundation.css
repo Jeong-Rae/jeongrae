@@ -49,3 +49,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+:root {
+  --color-shark-50: hsl(0, 0%, 96%);
+  --color-shark-100: hsl(0, 0%, 90%);
+  --color-shark-200: hsl(0, 0%, 80%);
+  --color-shark-300: hsl(0, 0%, 70%);
+  --color-shark-400: hsl(0, 0%, 55%);
+  --color-shark-500: hsl(0, 0%, 40%);
+  --color-shark-600: hsl(0, 0%, 30%);
+  --color-shark-700: hsl(0, 0%, 20%);
+  --color-shark-800: hsl(0, 0%, 15%);
+  --color-shark-900: hsl(0, 0%, 10%);
+  --color-shark-950: hsl(0, 0%, 5%);
+}

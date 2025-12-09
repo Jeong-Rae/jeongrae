@@ -49,16 +49,16 @@ export function ArticleList({ articles }: ArticleListProps) {
           >
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div className="space-y-2">
-                  <h3 className="font-bold text-[20px] leading-[1.6] text-[#4e5968] group-hover:text-[#3182f6] transition-colors">
+                  <h3 className="font-bold text-[20px] leading-[1.6] text-[var(--color-shark-800)] group-hover:text-[#3182f6] transition-colors">
                     {title}
                   </h3>
                   {summary && (
-                    <p className="text-sm leading-[1.6] text-[#4e5968]">
+                    <p className="text-sm leading-[1.6] text-[var(--color-shark-700)]">
                       {summary}
                     </p>
                   )}
                 </div>
-                <div className="text-xs leading-[1.6] text-[#4e5968] mt-3">
+                <div className="text-xs leading-[1.6] text-[var(--color-shark-700)] mt-3">
                   {uploadAt} {author && `· ${author}`}
                 </div>
               </div>

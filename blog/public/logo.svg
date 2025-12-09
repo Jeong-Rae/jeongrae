@@ -1,0 +1,19 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- 바깥 원 -->
+  <circle cx="120" cy="120" r="120" fill="#5165dd"/>
+
+  <!-- 내부 도형(아래로 이동) -->
+  <g fill="#ffffff" transform="translate(0,25)">
+    <!-- 우측상단 직각 삼각형 -->
+    <polygon points="80,40 160,40 160,120" />
+
+    <!-- 하단 반원 볼륨 -->
+    <path d="
+      M80 120
+      A60 60 0 0 0 160 120
+      L160 150
+      A60 60 0 0 1 80 150
+      Z"
+    />
+  </g>
+</svg>
