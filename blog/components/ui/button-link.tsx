@@ -13,6 +13,7 @@ type ButtonLinkProps = {
   disabled?: boolean;
 
   mode?: LinkMode;
+  withIcon?: boolean;
 
   prefetch?: LinkProps["prefetch"];
   replace?: LinkProps["replace"];
@@ -34,6 +35,7 @@ export function ButtonLink({
   children,
   disabled,
   mode = "external",
+  withIcon = false,
   prefetch,
   replace,
   scroll,
@@ -75,7 +77,9 @@ export function ButtonLink({
     <Button asChild {...buttonProps}>
       <Link href={href} {...linkProps} className="flex items-center gap-1">
         {children}
-        {isExternal && <ExternalLink className="h-3 w-3 opacity-70" />}
+        {isExternal && withIcon && (
+          <ExternalLink className="h-3 w-3 opacity-70" />
+        )}
       </Link>
     </Button>
   );
