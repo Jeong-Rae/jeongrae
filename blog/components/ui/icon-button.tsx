@@ -34,10 +34,10 @@ export function IconButton({
   size = "icon-sm",
   type = "button",
   children,
-  ...rest
+  ...props
 }: IconButtonProps) {
   return (
-    <Button type={type} size={size} aria-label={label} {...rest}>
+    <Button type={type} size={size} aria-label={label} {...props}>
       {position === "left" && icon}
       {children}
       {position === "right" && icon}

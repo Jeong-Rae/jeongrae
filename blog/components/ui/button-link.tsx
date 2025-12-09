@@ -40,11 +40,11 @@ export function ButtonLink({
   replace,
   scroll,
   shallow,
-  ...buttonProps
+  ...props
 }: ButtonLinkProps) {
   if (disabled || !href) {
     return (
-      <Button disabled {...buttonProps}>
+      <Button disabled {...props}>
         {children}
       </Button>
     );
@@ -74,7 +74,7 @@ export function ButtonLink({
   }
 
   return (
-    <Button asChild {...buttonProps}>
+    <Button asChild {...props}>
       <Link href={href} {...linkProps} className="flex items-center gap-1">
         {children}
         {isExternal && withIcon && (
