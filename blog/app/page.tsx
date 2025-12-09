@@ -1,6 +1,6 @@
 import { HeroCarousel } from "@/components/hero-carousel";
-import { ArticleTabs } from "@/components/article-tabs";
-import { ArticleList } from "@/components/article-list";
+import { ArticleTabs } from "@/components/article/article-tabs";
+import { ArticleList } from "@/components/article/article-list";
 import { PopularArticles } from "@/components/popular-articles";
 import { SeriesSection } from "@/components/series-section";
 import { Pagination } from "@/components/pagination";

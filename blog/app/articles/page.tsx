@@ -1,5 +1,5 @@
 import { getAllArticleMetas } from "@/lib/mdx/articles";
-import { ArticleList } from "@/components/article-list";
+import { ArticleList } from "@/components/article/article-list";
 
 export default function ArticlesIndexPage() {
   const metas = getAllArticleMetas();

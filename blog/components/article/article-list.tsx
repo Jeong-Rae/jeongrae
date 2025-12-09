@@ -1,6 +1,6 @@
 "use client";
 
-import { EmptyArticle } from "@/components/empty-article";
+import { EmptyArticle } from "@/components/article/empty-article";
 import { isEmpty } from "es-toolkit/compat";
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { Repeat } from "@/lib/react/repeat";
@@ -10,7 +10,7 @@ import Mesh185_2 from "@/public/mesh-185-2.png";
 import Mesh757_1 from "@/public/mesh-757-1.png";
 import Mesh757_2 from "@/public/mesh-757-2.png";
 
-import { Image } from "./ui/image";
+import { Image } from "../ui/image";
 
 type ArticleListProps = {
   articles: ArticleMeta[];
