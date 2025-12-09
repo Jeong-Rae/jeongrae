@@ -17,7 +17,7 @@ const carouselItems = [
   },
   {
     id: 2,
-    title: "There is no success\nwithout failure",
+    title: "There is no success\nwithout failure.",
     background: Mesh910,
   },
 ];
