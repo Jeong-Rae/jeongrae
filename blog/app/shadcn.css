@@ -44,8 +44,8 @@
   --accent-foreground: oklch(0.22 0.012 240);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: var(--color-shark-200);
-  --input: var(--color-shark-200);
+  --border: oklch(0.91 0.01 240);
+  --input: oklch(0.91 0.01 240);
   --ring: var(--color-royal-blue-600);
   --chart-1: oklch(0.558 0.183 272);
   --chart-2: oklch(0.6 0.118 184.704);
