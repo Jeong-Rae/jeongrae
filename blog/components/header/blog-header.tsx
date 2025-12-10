@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 import { GithubButton } from "./github-button";
 import { Logo } from "./logo";
 
@@ -14,10 +12,6 @@ export function BlogHeader() {
 
         <div className="flex items-center gap-3">
           <GithubButton />
-          <Button variant="ghost" size="icon">
-            <Search className="h-4 w-4" />
-            <span className="sr-only">검색</span>
-          </Button>
         </div>
       </div>
     </header>
