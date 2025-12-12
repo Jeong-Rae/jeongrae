@@ -2,76 +2,37 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Search, X } from "lucide-react";
 
+import { ArticleItem } from "@/components/article/article-item";
 import { Input } from "@/components/ui/input";
 import type { ArticleMeta } from "@/lib/mdx/types";
-
-import Mesh185_1 from "@/public/mesh-185-1.png";
-import Mesh185_2 from "@/public/mesh-185-2.png";
-import Mesh757_1 from "@/public/mesh-757-1.png";
-import Mesh757_2 from "@/public/mesh-757-2.png";
+import { useBooleanState } from "@/hook/useBooleanState";
+import { useInputState } from "@/hook/useInputState";
+import { Logo } from "./header/logo";
 
 interface SearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const fallbackThumbnails = [Mesh185_1, Mesh185_2, Mesh757_1, Mesh757_2];
-
-function pickMeshBySlug(slug: string) {
-  let hash = 0;
-  for (let i = 0; i < slug.length; i += 1) {
-    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % fallbackThumbnails.length;
-  return fallbackThumbnails[index];
-}
-
-function ArticleItem({
-  article,
-  onSelect,
-}: {
-  article: ArticleMeta;
-  onSelect: () => void;
-}) {
-  const thumbnail = article.thumbnail ?? pickMeshBySlug(article.slug);
-
+function PopularArticleItem({ article }: { article: ArticleMeta }) {
+  const { slug, title } = article;
   return (
     <Link
-      href={`/articles/${article.slug}`}
-      onClick={onSelect}
-      className="flex items-start justify-between gap-4 py-5 border-b border-border hover:bg-muted/50 transition-colors px-2 rounded-lg"
+      href={`/articles/${slug}`}
+      className="block px-3 py-2 rounded-md hover:bg-muted transition-colors"
     >
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-foreground mb-2 hover:text-primary transition-colors line-clamp-2">
-          {article.title}
-        </h3>
-        {article.summary && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{article.summary}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          {article.uploadAt} {article.author && `· ${article.author}`}
-        </p>
-      </div>
-      <div className="flex-shrink-0">
-        <Image
-          src={thumbnail}
-          alt={article.title}
-          width={130}
-          height={90}
-          className="rounded-lg object-cover w-[130px] h-[90px]"
-        />
-      </div>
+      <p className="text-sm text-muted-foreground">{""}</p>
+      <p className="font-medium text-foreground">{title}</p>
     </Link>
   );
 }
 
 export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
-  const [query, setQuery] = useState("");
+  const { value: query, onChange: handleQueryChange, reset: resetQuery } = useInputState("");
   const [articles, setArticles] = useState<ArticleMeta[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { value: isLoading, setTrue: startLoading, setFalse: stopLoading } = useBooleanState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -101,15 +62,15 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
   useEffect(() => {
     if (!isOpen) {
-      setQuery("");
+      resetQuery();
       setArticles([]);
       setError(null);
-      return () => {};
+      return undefined;
     }
 
     const controller = new AbortController();
     const delay = setTimeout(() => {
-      setIsLoading(true);
+      startLoading();
       fetch(`/api/search?query=${encodeURIComponent(query)}`, {
         method: "GET",
         signal: controller.signal,
@@ -127,14 +88,14 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           setError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
           setArticles([]);
         })
-        .finally(() => setIsLoading(false));
+        .finally(() => stopLoading());
     }, 200);
 
     return () => {
       clearTimeout(delay);
       controller.abort();
     };
-  }, [isOpen, query]);
+  }, [isOpen, query, resetQuery, startLoading, stopLoading]);
 
   const hasQuery = useMemo(() => query.trim().length > 0, [query]);
   const showEmptyState = hasQuery && !isLoading && articles.length === 0 && !error;
@@ -146,10 +107,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       <div className="flex flex-col h-full max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="font-bold text-primary-foreground text-lg">J</span>
-            </div>
-            <span className="font-bold text-xl">Jeongrae</span>
+            <Logo />
           </div>
           <button
             onClick={onClose}
@@ -168,7 +126,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             type="text"
             placeholder="검색어를 입력하세요"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={handleQueryChange}
             className="w-full h-14 pl-12 pr-4 text-lg border-2 border-border rounded-xl focus:border-primary"
           />
         </div>
@@ -182,10 +140,10 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <div className="text-center text-muted-foreground py-12">검색 중입니다...</div>
           ) : !hasQuery ? (
             <div>
-              <h2 className="text-lg font-semibold mb-4 text-foreground">추천 게시글</h2>
+              <h2 className="text-lg font-semibold mb-4 text-foreground">Popular 게시글</h2>
               <div className="space-y-1">
                 {articles.map((article) => (
-                  <ArticleItem key={article.slug} article={article} onSelect={onClose} />
+                  <PopularArticleItem key={article.slug} article={article} />
                 ))}
               </div>
             </div>
@@ -199,7 +157,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               <p className="text-sm text-muted-foreground mb-4">{articles.length}개의 결과</p>
               <div className="space-y-1">
                 {articles.map((article) => (
-                  <ArticleItem key={article.slug} article={article} onSelect={onClose} />
+                  <ArticleItem key={article.slug} article={article} variant="overlay" onSelect={onClose} />
                 ))}
               </div>
             </div>
