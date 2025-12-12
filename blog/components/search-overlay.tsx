@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { ArticleItem } from "@/components/article/article-item";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { useBooleanState } from "@/hook/useBooleanState";
 import { useInputState } from "@/hook/useInputState";
@@ -15,19 +13,6 @@ import { useRangeIndexNavigator } from "@/hook/useIndexNavigator";
 import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";
 import { Logo } from "./header/logo";
 import { OverlayControllerComponent } from "overlay-kit";
-
-function PopularArticleItem({ article }: { article: ArticleMeta }) {
-  const { slug, title } = article;
-  return (
-    <Link
-      href={`/articles/${slug}`}
-      className="block px-3 py-2 rounded-md hover:bg-muted transition-colors"
-    >
-      <p className="text-sm text-muted-foreground">{""}</p>
-      <p className="font-medium text-foreground">{title}</p>
-    </Link>
-  );
-}
 
 export const SearchOverlay: OverlayControllerComponent = ({
   isOpen,
@@ -41,6 +26,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
     reset: resetQuery,
   } = useInputState("");
   const [articles, setArticles] = useState<ArticleMeta[]>([]);
+  const [popularArticles, setPopularArticles] = useState<ArticleMeta[]>([]);
   const {
     value: isLoading,
     setTrue: startLoading,
@@ -50,17 +36,27 @@ export const SearchOverlay: OverlayControllerComponent = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const hasQuery = useMemo(() => query.trim().length > 0, [query]);
+  const showEmptyState =
+    hasQuery && !isLoading && articles.length === 0 && !error;
+
+  const listToNavigate = useMemo(() => {
+    if (!hasQuery || showEmptyState) {
+      return popularArticles;
+    }
+    return articles;
+  }, [hasQuery, showEmptyState, popularArticles, articles]);
+
   const {
     index: activeIndex,
     item: activeArticle,
     setIndex: setActiveIndex,
     goNext: goNextArticle,
     goPrev: goPrevArticle,
-  } = useRangeIndexNavigator<ArticleMeta>({ items: articles });
+  } = useRangeIndexNavigator<ArticleMeta>({ items: listToNavigate });
 
   const shouldEnableNavigation = useMemo(
-    () => hasQuery && articles.length > 0,
-    [articles.length, hasQuery],
+    () => listToNavigate.length > 0,
+    [listToNavigate],
   );
 
   const handleClose = useCallback(() => {
@@ -137,6 +133,23 @@ export const SearchOverlay: OverlayControllerComponent = ({
       resetQuery();
       setArticles([]);
       setError(null);
+      return;
+    }
+
+    fetch(`/api/search?query=`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("추천 게시글을 불러오지 못했습니다.");
+        const payload = (await response.json()) as { articles?: ArticleMeta[] };
+        setPopularArticles(payload.articles ?? []);
+      })
+      .catch(() => {
+      });
+  }, [isOpen, resetQuery]);
+
+  useEffect(() => {
+    if (!hasQuery) {
+      setArticles([]);
+      setError(null);
       return undefined;
     }
 
@@ -169,16 +182,41 @@ export const SearchOverlay: OverlayControllerComponent = ({
       clearTimeout(delay);
       controller.abort();
     };
-  }, [isOpen, query, resetQuery, startLoading, stopLoading]);
+  }, [hasQuery, isOpen, query, startLoading, stopLoading]);
 
   useEffect(() => {
-    if (!hasQuery) return;
-    if (articles.length === 0) return;
-    setActiveIndex(0);
-  }, [articles.length, hasQuery, setActiveIndex]);
+    if (listToNavigate.length === 0) return;
+    if (listToNavigate === popularArticles && hasQuery) {
+      setActiveIndex(0);
+      return;
+    }
+    if (listToNavigate === articles) {
+      setActiveIndex(0);
+    }
+  }, [listToNavigate, articles, popularArticles, hasQuery, setActiveIndex]);
 
-  const showEmptyState =
-    hasQuery && !isLoading && articles.length === 0 && !error;
+  const renderPopularArticles = () => (
+    <div>
+      <h2 className="text-lg font-semibold mb-4 text-foreground">
+        추천 게시글
+      </h2>
+      <div className="space-y-1">
+        {popularArticles.map((article, index) => (
+          <ArticleItem
+            key={article.slug}
+            article={article}
+            variant="overlay"
+            onSelect={handleClose}
+            active={
+              shouldEnableNavigation &&
+              (listToNavigate === popularArticles) &&
+              index === activeIndex
+            }
+          />
+        ))}
+      </div>
+    </div>
+  );
 
   if (!isOpen) return null;
 
@@ -219,26 +257,20 @@ export const SearchOverlay: OverlayControllerComponent = ({
             <div className="text-center text-destructive py-12">
               <p className="text-lg font-medium mb-2">{error}</p>
             </div>
-          ) : isLoading && articles.length === 0 ? (
+          ) : isLoading ? (
             <div className="text-center text-muted-foreground py-12">
               검색 중입니다...
             </div>
           ) : !hasQuery ? (
-            <div>
-              <h2 className="text-lg font-semibold mb-4 text-foreground">
-                인기 게시글
-              </h2>
-              <div className="space-y-1">
-                {articles.map((article) => (
-                  <PopularArticleItem key={article.slug} article={article} />
-                ))}
-              </div>
-            </div>
+            renderPopularArticles()
           ) : showEmptyState ? (
-            <div className="text-center text-muted-foreground py-12">
-              <p className="text-lg font-medium mb-2">검색 결과가 없습니다</p>
-              <p className="text-sm">다른 검색어를 입력해 보세요</p>
-            </div>
+            <>
+              <div className="text-center text-muted-foreground py-12">
+                <p className="text-lg font-medium mb-2">검색 결과가 없습니다</p>
+                <p className="text-sm">다른 검색어를 입력해 보세요</p>
+              </div>
+              {renderPopularArticles()}
+            </>
           ) : (
             <div>
               <p className="text-sm text-muted-foreground mb-4">
