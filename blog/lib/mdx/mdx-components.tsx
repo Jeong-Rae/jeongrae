@@ -25,6 +25,7 @@ import {
   TypographyThead,
   TypographyTr,
 } from "@/components/ui/typography";
+import { Callout } from "@/components/ui/callout";
 
 export const mdxComponents: MDXComponents = {
   h1: (props) => <TypographyH1 {...props} withBorder={false} />,
@@ -47,4 +48,5 @@ export const mdxComponents: MDXComponents = {
   code: TypographyInlineCode,
   a: TypographyLink,
   Image: (props) => <Image {...props} wide="75" border />,
+  Callout
 };
