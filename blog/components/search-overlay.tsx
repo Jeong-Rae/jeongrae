@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { useBooleanState } from "@/hook/useBooleanState";
 import { useInputState } from "@/hook/useInputState";
+import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";
 import { Logo } from "./header/logo";
 import { OverlayControllerComponent } from "overlay-kit";
 
@@ -30,13 +31,22 @@ export const SearchOverlay: OverlayControllerComponent = ({
   close,
   unmount,
 }) => {
-  const { value: query, onChange: handleQueryChange, reset: resetQuery } = useInputState("");
+  const {
+    value: query,
+    onChange: handleQueryChange,
+    reset: resetQuery,
+  } = useInputState("");
   const [articles, setArticles] = useState<ArticleMeta[]>([]);
-  const { value: isLoading, setTrue: startLoading, setFalse: stopLoading } = useBooleanState(false);
+  const {
+    value: isLoading,
+    setTrue: startLoading,
+    setFalse: stopLoading,
+  } = useBooleanState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-const handleClose = useCallback(() => {
+  const handleClose = useCallback(() => {
     close();
     unmount();
   }, [close, unmount]);
@@ -47,23 +57,28 @@ const handleClose = useCallback(() => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        handleClose();
-      }
-    };
+  useKeyboardShortcuts(
+    [
+      {
+        keys: "Escape",
+        handler: handleClose,
+      },
+    ],
+    {
+      enabled: isOpen && overlayRef.current !== null,
+      target: overlayRef.current || undefined,
+    },
+  );
 
+  useEffect(() => {
     if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
       document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
     };
-  }, [isOpen, handleClose]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -84,7 +99,9 @@ const handleClose = useCallback(() => {
           if (!response.ok) {
             throw new Error("검색 요청에 실패했습니다.");
           }
-          const payload = (await response.json()) as { articles?: ArticleMeta[] };
+          const payload = (await response.json()) as {
+            articles?: ArticleMeta[];
+          };
           setArticles(payload.articles ?? []);
           setError(null);
         })
@@ -103,12 +120,16 @@ const handleClose = useCallback(() => {
   }, [isOpen, query, resetQuery, startLoading, stopLoading]);
 
   const hasQuery = useMemo(() => query.trim().length > 0, [query]);
-  const showEmptyState = hasQuery && !isLoading && articles.length === 0 && !error;
+  const showEmptyState =
+    hasQuery && !isLoading && articles.length === 0 && !error;
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background backdrop-blur-sm">
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-[100] bg-background backdrop-blur-sm"
+    >
       <div className="flex flex-col h-full max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
@@ -142,10 +163,14 @@ const handleClose = useCallback(() => {
               <p className="text-lg font-medium mb-2">{error}</p>
             </div>
           ) : isLoading && articles.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">검색 중입니다...</div>
+            <div className="text-center text-muted-foreground py-12">
+              검색 중입니다...
+            </div>
           ) : !hasQuery ? (
             <div>
-              <h2 className="text-lg font-semibold mb-4 text-foreground">인기 게시글</h2>
+              <h2 className="text-lg font-semibold mb-4 text-foreground">
+                인기 게시글
+              </h2>
               <div className="space-y-1">
                 {articles.map((article) => (
                   <PopularArticleItem key={article.slug} article={article} />
@@ -159,10 +184,17 @@ const handleClose = useCallback(() => {
             </div>
           ) : (
             <div>
-              <p className="text-sm text-muted-foreground mb-4">{articles.length}개의 결과</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                {articles.length}개의 결과
+              </p>
               <div className="space-y-1">
                 {articles.map((article) => (
-                  <ArticleItem key={article.slug} article={article} variant="overlay" onSelect={handleClose} />
+                  <ArticleItem
+                    key={article.slug}
+                    article={article}
+                    variant="overlay"
+                    onSelect={handleClose}
+                  />
                 ))}
               </div>
             </div>
@@ -171,4 +203,4 @@ const handleClose = useCallback(() => {
       </div>
     </div>
   );
-}
+};
