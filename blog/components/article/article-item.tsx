@@ -16,6 +16,7 @@ type ArticleItemProps = {
   variant?: "list" | "overlay";
   onSelect?: () => void;
   className?: string;
+  active?: boolean;
 };
 
 const fallbackThumbnails = [Mesh185_1, Mesh185_2, Mesh757_1, Mesh757_2];
@@ -77,6 +78,7 @@ export function ArticleItem({
   variant = "list",
   onSelect,
   className,
+  active,
 }: ArticleItemProps) {
   const styles = variantStyles[variant];
   const { slug, thumbnail, title, summary, uploadAt, author } = article;
@@ -86,11 +88,25 @@ export function ArticleItem({
     <Link
       href={`/articles/${slug}`}
       onClick={onSelect}
-      className={cn(styles.container, className)}
+      className={cn(
+        styles.container,
+        {
+          "opacity-80": active && variant === "list",
+          "bg-muted/50": active && variant === "overlay",
+        },
+        className,
+      )}
     >
       <div className={styles.content}>
         <div className={styles.headingWrapper}>
-          <h3 className={styles.title}>{title}</h3>
+          <h3
+            className={cn(styles.title, {
+              "text-[#3182f6]": active && variant === "list",
+              "text-primary": active && variant === "overlay",
+            })}
+          >
+            {title}
+          </h3>
           {summary && <p className={styles.summary}>{summary}</p>}
         </div>
         <div className={styles.meta}>

@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { ArticleItem } from "@/components/article/article-item";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { useBooleanState } from "@/hook/useBooleanState";
 import { useInputState } from "@/hook/useInputState";
+import { useRangeIndexNavigator } from "@/hook/useIndexNavigator";
 import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";
 import { Logo } from "./header/logo";
 import { OverlayControllerComponent } from "overlay-kit";
@@ -31,6 +34,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
   close,
   unmount,
 }) => {
+  const router = useRouter();
   const {
     value: query,
     onChange: handleQueryChange,
@@ -45,6 +49,19 @@ export const SearchOverlay: OverlayControllerComponent = ({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const hasQuery = useMemo(() => query.trim().length > 0, [query]);
+  const {
+    index: activeIndex,
+    item: activeArticle,
+    setIndex: setActiveIndex,
+    goNext: goNextArticle,
+    goPrev: goPrevArticle,
+  } = useRangeIndexNavigator<ArticleMeta>({ items: articles });
+
+  const shouldEnableNavigation = useMemo(
+    () => hasQuery && articles.length > 0,
+    [articles.length, hasQuery],
+  );
 
   const handleClose = useCallback(() => {
     close();
@@ -57,6 +74,12 @@ export const SearchOverlay: OverlayControllerComponent = ({
     }
   }, [isOpen]);
 
+  const handleNavigateToArticle = useCallback(() => {
+    if (!shouldEnableNavigation || !activeArticle) return;
+    router.push(`/articles/${activeArticle.slug}`);
+    handleClose();
+  }, [activeArticle, handleClose, router, shouldEnableNavigation]);
+
   useKeyboardShortcuts(
     [
       {
@@ -65,8 +88,37 @@ export const SearchOverlay: OverlayControllerComponent = ({
       },
     ],
     {
-      enabled: isOpen && overlayRef.current !== null,
-      target: overlayRef.current || undefined,
+      enabled: isOpen,
+    },
+  );
+
+  useKeyboardShortcuts(
+    [
+      {
+        keys: ["ArrowDown", "Down"],
+        handler: () => {
+          if (!shouldEnableNavigation) return;
+          goNextArticle();
+        },
+        preventDefault: shouldEnableNavigation,
+      },
+      {
+        keys: ["ArrowUp", "Up"],
+        handler: () => {
+          if (!shouldEnableNavigation) return;
+          goPrevArticle();
+        },
+        preventDefault: shouldEnableNavigation,
+      },
+      {
+        keys: "Enter",
+        handler: handleNavigateToArticle,
+        preventDefault: shouldEnableNavigation,
+      },
+    ],
+    {
+      enabled: isOpen,
+      target: inputRef.current || undefined,
     },
   );
 
@@ -119,7 +171,12 @@ export const SearchOverlay: OverlayControllerComponent = ({
     };
   }, [isOpen, query, resetQuery, startLoading, stopLoading]);
 
-  const hasQuery = useMemo(() => query.trim().length > 0, [query]);
+  useEffect(() => {
+    if (!hasQuery) return;
+    if (articles.length === 0) return;
+    setActiveIndex(0);
+  }, [articles.length, hasQuery, setActiveIndex]);
+
   const showEmptyState =
     hasQuery && !isLoading && articles.length === 0 && !error;
 
@@ -188,12 +245,13 @@ export const SearchOverlay: OverlayControllerComponent = ({
                 {articles.length}개의 결과
               </p>
               <div className="space-y-1">
-                {articles.map((article) => (
+                {articles.map((article, index) => (
                   <ArticleItem
                     key={article.slug}
                     article={article}
                     variant="overlay"
                     onSelect={handleClose}
+                    active={shouldEnableNavigation && index === activeIndex}
                   />
                 ))}
               </div>

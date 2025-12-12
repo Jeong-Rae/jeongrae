@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { modulo, clamp } from "@lyght/ts";
-import { isArray, isNumber, isNative, isFunction } from "es-toolkit/compat";
+import { isArray, isNumber, isFunction } from "es-toolkit/compat";
 
 type IndexNavigatorMode = "range" | "circle";
 
@@ -40,7 +40,7 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
   const isCircleMode = mode === "circle";
 
   const clampIndex = (raw: number): number => {
-    if (isNative(length)) return 0;
+    if (length <= 0) return 0;
 
     if (isCircleMode) {
       const value = modulo(raw, length);
@@ -92,7 +92,7 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
   const item = useMemo(() => {
     const maybeItems = params.items;
     if (!isArray(maybeItems)) return null;
-    if (isNative(length)) return null;
+    if (length <= 0) return null;
     return maybeItems[index] ?? null;
   }, [params, index, length]);
 
