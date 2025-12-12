@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
 
@@ -10,11 +10,7 @@ import type { ArticleMeta } from "@/lib/mdx/types";
 import { useBooleanState } from "@/hook/useBooleanState";
 import { useInputState } from "@/hook/useInputState";
 import { Logo } from "./header/logo";
-
-interface SearchOverlayProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import { OverlayControllerComponent } from "overlay-kit";
 
 function PopularArticleItem({ article }: { article: ArticleMeta }) {
   const { slug, title } = article;
@@ -29,12 +25,21 @@ function PopularArticleItem({ article }: { article: ArticleMeta }) {
   );
 }
 
-export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
+export const SearchOverlay: OverlayControllerComponent = ({
+  isOpen,
+  close,
+  unmount,
+}) => {
   const { value: query, onChange: handleQueryChange, reset: resetQuery } = useInputState("");
   const [articles, setArticles] = useState<ArticleMeta[]>([]);
   const { value: isLoading, setTrue: startLoading, setFalse: stopLoading } = useBooleanState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+const handleClose = useCallback(() => {
+    close();
+    unmount();
+  }, [close, unmount]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -45,7 +50,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        handleClose();
       }
     };
 
@@ -58,7 +63,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       document.removeEventListener("keydown", handleEsc);
       document.body.style.overflow = "";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -110,7 +115,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <Logo />
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 rounded-full hover:bg-muted transition-colors"
             aria-label="검색 닫기"
             type="button"
@@ -140,7 +145,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <div className="text-center text-muted-foreground py-12">검색 중입니다...</div>
           ) : !hasQuery ? (
             <div>
-              <h2 className="text-lg font-semibold mb-4 text-foreground">Popular 게시글</h2>
+              <h2 className="text-lg font-semibold mb-4 text-foreground">인기 게시글</h2>
               <div className="space-y-1">
                 {articles.map((article) => (
                   <PopularArticleItem key={article.slug} article={article} />
@@ -157,7 +162,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               <p className="text-sm text-muted-foreground mb-4">{articles.length}개의 결과</p>
               <div className="space-y-1">
                 {articles.map((article) => (
-                  <ArticleItem key={article.slug} article={article} variant="overlay" onSelect={onClose} />
+                  <ArticleItem key={article.slug} article={article} variant="overlay" onSelect={handleClose} />
                 ))}
               </div>
             </div>

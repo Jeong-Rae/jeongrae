@@ -1,18 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { GithubButton } from "./github-button";
 import { Logo } from "./logo";
 import { Button } from "../ui/button";
+import { overlay } from "overlay-kit";
 import { SearchOverlay } from "../search-overlay";
 
 export function BlogHeader() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const openSearch = useCallback(() => setIsSearchOpen(true), []);
-  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
+  const openSearch = useCallback(() => {
+    overlay.open((props) => <SearchOverlay {...props} />);
+  }, []);
 
   return (
     <>
@@ -31,7 +31,6 @@ export function BlogHeader() {
           </div>
         </div>
       </header>
-      <SearchOverlay isOpen={isSearchOpen} onClose={closeSearch} />
     </>
   );
 }

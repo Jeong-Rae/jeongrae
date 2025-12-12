@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { OverlayProvider } from "overlay-kit";
 import { BlogHeader } from "@/components/header/blog-header";
 import "./globals.css";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`font-sans antialiased`}>
+        <OverlayProvider>
         <div className="min-h-screen">
           <BlogHeader />
           <main className="container mx-auto max-w-6xl px-4 py-8">
@@ -46,6 +48,7 @@ export default function RootLayout({
           </main>
         </div>
         <Analytics />
+      </OverlayProvider>
       </body>
     </html>
   );
