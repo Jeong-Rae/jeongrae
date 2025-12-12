@@ -46,7 +46,7 @@ function parseBoolean(
   }
 }
 
-function parseObject<T = Record<string, any>>(
+function parseObject<T = Record<string, unknown>>(
   value: QueryInput,
   defaultValue?: T,
 ): T | undefined {
@@ -106,7 +106,7 @@ export function getQueryParam(
       return parseBoolean(value, defaultValue as boolean);
 
     case "object":
-      return parseObject(value, defaultValue as Record<string, any>);
+      return parseObject(value, defaultValue as Record<string, unknown>);
 
     default:
       return defaultValue;

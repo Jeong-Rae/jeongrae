@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 
 /**
  * boolean 상태 객체
@@ -21,7 +21,9 @@ type UseBooleanStateResult = {
  * @example
  * const { value, setTrue, setFalse, toggle } = useBooleanState(false);
  */
-export function useBooleanState(initial: boolean = false): UseBooleanStateResult {
+export function useBooleanState(
+  initial: boolean = false,
+): UseBooleanStateResult {
   const [value, setValue] = useState(initial);
 
   const setTrue = useCallback(() => setValue(true), []);

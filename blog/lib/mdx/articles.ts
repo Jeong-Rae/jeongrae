@@ -46,7 +46,7 @@ export function findArticleMetaBySlug(slug: string): ArticleMeta | null {
 }
 
 // !NOTE 검색어는 소문자로 변환되어 제목, 요약, 작성자, 태그에서 검색됩니다.
-// !TODO 
+// !TODO
 export function findArticleMetasByQuery(query: string): ArticleMeta[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return [];
@@ -69,7 +69,9 @@ export function findArticleMetasByQuery(query: string): ArticleMeta[] {
   return sortArticleMetasByUploadAt(filtered);
 }
 
-export function sortArticleMetasByUploadAt(metas: ArticleMeta[]): ArticleMeta[] {
+export function sortArticleMetasByUploadAt(
+  metas: ArticleMeta[],
+): ArticleMeta[] {
   return orderBy(
     metas,
     [(item) => (item.uploadAt ? new Date(item.uploadAt).getTime() : 0)],

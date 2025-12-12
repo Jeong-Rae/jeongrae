@@ -1,14 +1,13 @@
-
 import type { Config } from "tailwindcss";
 
 const config = {
   darkMode: "class",
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -21,17 +20,17 @@ const config = {
     extend: {
       colors: {
         shark: {
-          '50': 'var(--color-shark-50)',
-          '100': 'var(--color-shark-100)',
-          '200': 'var(--color-shark-200)',
-          '300': 'var(--color-shark-300)',
-          '400': 'var(--color-shark-400)',
-          '500': 'var(--color-shark-500)',
-          '600': 'var(--color-shark-600)',
-          '700': 'var(--color-shark-700)',
-          '800': 'var(--color-shark-800)',
-          '900': 'var(--color-shark-900)',
-          '950': 'var(--color-shark-950)',
+          "50": "var(--color-shark-50)",
+          "100": "var(--color-shark-100)",
+          "200": "var(--color-shark-200)",
+          "300": "var(--color-shark-300)",
+          "400": "var(--color-shark-400)",
+          "500": "var(--color-shark-500)",
+          "600": "var(--color-shark-600)",
+          "700": "var(--color-shark-700)",
+          "800": "var(--color-shark-800)",
+          "900": "var(--color-shark-900)",
+          "950": "var(--color-shark-950)",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -89,6 +88,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;

@@ -23,7 +23,12 @@ export function BlogHeader() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={openSearch} className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openSearch}
+              className="gap-2"
+            >
               <Search className="h-4 w-4" />
               검색
             </Button>

@@ -39,7 +39,8 @@ const variantStyles = {
       "font-bold text-[20px] leading-[1.6] text-[var(--color-shark-800)] group-hover:text-[#3182f6] transition-colors",
     summary: "text-sm leading-[1.6] text-[var(--color-shark-700)]",
     meta: "text-xs leading-[1.6] text-[var(--color-shark-700)] mt-3",
-    imageWrapper: "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
+    imageWrapper:
+      "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
     imageClassName: "w-full h-full object-cover",
     imageSize: { width: 130, height: 130 },
   },
@@ -48,24 +49,28 @@ const variantStyles = {
       "flex items-start justify-between gap-4 py-5 border-b border-border hover:bg-muted/50 transition-colors px-2 rounded-lg",
     content: "flex-1 min-w-0",
     headingWrapper: "space-y-2",
-    title: "font-semibold text-foreground mb-2 hover:text-primary transition-colors line-clamp-2",
+    title:
+      "font-semibold text-foreground mb-2 hover:text-primary transition-colors line-clamp-2",
     summary: "text-sm text-muted-foreground line-clamp-2 mb-3",
     meta: "text-xs text-muted-foreground",
     imageWrapper: "flex-shrink-0",
     imageClassName: "rounded-lg object-cover w-[130px] h-[90px]",
     imageSize: { width: 130, height: 90 },
   },
-} satisfies Record<NonNullable<ArticleItemProps["variant"]>, {
-  container: string;
-  content: string;
-  headingWrapper: string;
-  title: string;
-  summary: string;
-  meta: string;
-  imageWrapper: string;
-  imageClassName: string;
-  imageSize: { width: number; height: number };
-}>;
+} satisfies Record<
+  NonNullable<ArticleItemProps["variant"]>,
+  {
+    container: string;
+    content: string;
+    headingWrapper: string;
+    title: string;
+    summary: string;
+    meta: string;
+    imageWrapper: string;
+    imageClassName: string;
+    imageSize: { width: number; height: number };
+  }
+>;
 
 export function ArticleItem({
   article,

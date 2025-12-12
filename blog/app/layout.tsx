@@ -41,14 +41,14 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`font-sans antialiased`}>
         <OverlayProvider>
-        <div className="min-h-screen">
-          <BlogHeader />
-          <main className="container mx-auto max-w-6xl px-4 py-8">
-            {children}
-          </main>
-        </div>
-        <Analytics />
-      </OverlayProvider>
+          <div className="min-h-screen">
+            <BlogHeader />
+            <main className="container mx-auto max-w-6xl px-4 py-8">
+              {children}
+            </main>
+          </div>
+          <Analytics />
+        </OverlayProvider>
       </body>
     </html>
   );

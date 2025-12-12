@@ -14,6 +14,7 @@ export function ArticleTabs() {
         <Repeat.Each each={tabs}>
           {(tab) => (
             <button
+              type="button"
               onClick={() => setActiveTab(tab)}
               className={`relative py-4 text-sm font-medium transition-colors ${
                 activeTab === tab
