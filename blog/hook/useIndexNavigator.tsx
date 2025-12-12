@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { modulo, clamp } from "@lyght/ts";
 import { isArray, isNumber, isFunction } from "es-toolkit/compat";
 
@@ -39,7 +39,7 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
   const length = getNavigatorLength(params);
   const isCircleMode = mode === "circle";
 
-  const clampIndex = (raw: number): number => {
+  const clampIndex = useCallback((raw: number): number => {
     if (length <= 0) return 0;
 
     if (isCircleMode) {
@@ -48,7 +48,7 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
     }
 
     return clamp(raw, 0, length - 1);
-  };
+  }, [length, isCircleMode]);
 
   const [index, setIndexState] = useState(() => clampIndex(initialIndex));
 
@@ -70,24 +70,24 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
     return index > 0;
   }, [canMove, mode, index]);
 
-  const setIndex = (next: number | ((prev: number) => number)) => {
+  const setIndex = useCallback((next: number | ((prev: number) => number)) => {
     setIndexState((prev) => {
       const target = isFunction(next) ? next(prev) : next;
       return clampIndex(target);
     });
-  };
+  }, [clampIndex]);
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     if (canGoNext) setIndex((p) => p + 1);
-  };
+  }, [canGoNext, setIndex]);
 
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (canGoPrev) setIndex((p) => p - 1);
-  };
+  }, [canGoPrev, setIndex]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setIndex(initialIndex);
-  };
+  }, [setIndex, initialIndex]);
 
   const item = useMemo(() => {
     const maybeItems = params.items;
