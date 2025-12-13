@@ -10,6 +10,8 @@ export type ArticleFrontmatter = {
   author?: string;
   thumbnail?: string;
   tags?: string[];
+  featured?: number;
+  series?: string;
 };
 
 /**
@@ -19,6 +21,7 @@ export type ArticleFrontmatter = {
 export type ArticleMeta = ArticleFrontmatter & {
   slug: string;
   filePath: string;
+  seriesSlug?: string;
 };
 
 /**

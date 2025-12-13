@@ -1,7 +1,7 @@
 import { HeroCarousel } from "@/components/hero-carousel";
 import { ArticleTabs } from "@/components/article/article-tabs";
 import { ArticleList } from "@/components/article/article-list";
-import { PopularArticles } from "@/components/popular-articles";
+import { FeaturedArticles } from "@/components/featured-articles";
 import { SeriesSection } from "@/components/series-section";
 import { Pagination } from "@/components/pagination";
 import { getPaginatedArticles } from "@/lib/mdx/articles";
@@ -46,9 +46,9 @@ export default async function Home({ searchParams }: HomeProps) {
           <Pagination currentPage={currentPage} totalPages={totalPages} />
         </div>
 
-        {/* Right: Sidebar with Popular & Series */}
+        {/* Right: Sidebar with Featured & Series */}
         <div className="space-y-8">
-          <PopularArticles />
+          <FeaturedArticles />
           <SeriesSection />
         </div>
       </div>

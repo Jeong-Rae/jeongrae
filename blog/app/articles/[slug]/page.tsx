@@ -1,8 +1,8 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleContent } from "@/components/article/article-content";
 import { RelatedSeries } from "@/components/related-series";
-import { getAllArticleMetas } from "@/lib/mdx/articles";
+import { getAllArticleMetas, getRelatedSeriesArticles } from "@/lib/mdx/articles";
 import { getCompiledArticleBySlug } from "@/lib/mdx/compile";
 
 type PageProps = {
@@ -46,8 +46,9 @@ export default async function ArticlePage({ params }: PageProps) {
   }
 
   const { meta, content } = article;
-
-  const relatedSeries: Array<unknown> = [];
+  const relatedSeries = meta.seriesSlug
+    ? getRelatedSeriesArticles(meta.seriesSlug, meta.slug)
+    : [];
 
   return (
     <div className="min-h-screen">
@@ -69,7 +70,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
         {relatedSeries.length > 0 && (
           <div className="mt-20 pt-12 border-t border-border">
-            <RelatedSeries articles={relatedSeries as any} />
+            <RelatedSeries articles={relatedSeries} />
           </div>
         )}
       </main>

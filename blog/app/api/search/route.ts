@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   findArticleMetasByQuery,
-  getRecommendedArticles,
+  getFeaturedRecommendations,
 } from "@/lib/mdx/articles";
 
 export async function GET(request: Request) {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   const articles = query
     ? findArticleMetasByQuery(query)
-    : getRecommendedArticles(3);
+    : getFeaturedRecommendations(3);
 
   return NextResponse.json({ articles });
 }

@@ -26,7 +26,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
     reset: resetQuery,
   } = useInputState("");
   const [articles, setArticles] = useState<ArticleMeta[]>([]);
-  const [popularArticles, setPopularArticles] = useState<ArticleMeta[]>([]);
+  const [featuredArticles, setFeaturedArticles] = useState<ArticleMeta[]>([]);
   const {
     value: isLoading,
     setTrue: startLoading,
@@ -41,10 +41,10 @@ export const SearchOverlay: OverlayControllerComponent = ({
 
   const listToNavigate = useMemo(() => {
     if (!hasQuery || showEmptyState) {
-      return popularArticles;
+      return featuredArticles;
     }
     return articles;
-  }, [hasQuery, showEmptyState, popularArticles, articles]);
+  }, [hasQuery, showEmptyState, featuredArticles, articles]);
 
   const {
     index: activeIndex,
@@ -140,7 +140,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
       .then(async (response) => {
         if (!response.ok) throw new Error("추천 게시글을 불러오지 못했습니다.");
         const payload = (await response.json()) as { articles?: ArticleMeta[] };
-        setPopularArticles(payload.articles ?? []);
+        setFeaturedArticles(payload.articles ?? []);
       })
       .catch(() => {
       });
@@ -186,22 +186,22 @@ export const SearchOverlay: OverlayControllerComponent = ({
 
   useEffect(() => {
     if (listToNavigate.length === 0) return;
-    if (listToNavigate === popularArticles && hasQuery) {
+    if (listToNavigate === featuredArticles && hasQuery) {
       setActiveIndex(0);
       return;
     }
     if (listToNavigate === articles) {
       setActiveIndex(0);
     }
-  }, [listToNavigate, articles, popularArticles, hasQuery, setActiveIndex]);
+  }, [listToNavigate, articles, featuredArticles, hasQuery, setActiveIndex]);
 
-  const renderPopularArticles = () => (
+  const renderFeaturedArticles = () => (
     <div>
       <h2 className="text-lg font-semibold mb-4 text-foreground">
-        추천 게시글
+        Featured 게시글
       </h2>
       <div className="space-y-1">
-        {popularArticles.map((article, index) => (
+        {featuredArticles.map((article, index) => (
           <ArticleItem
             key={article.slug}
             article={article}
@@ -209,7 +209,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
             onSelect={handleClose}
             active={
               shouldEnableNavigation &&
-              (listToNavigate === popularArticles) &&
+              (listToNavigate === featuredArticles) &&
               index === activeIndex
             }
           />
@@ -262,14 +262,14 @@ export const SearchOverlay: OverlayControllerComponent = ({
               검색 중입니다...
             </div>
           ) : !hasQuery ? (
-            renderPopularArticles()
+            renderFeaturedArticles()
           ) : showEmptyState ? (
             <>
               <div className="text-center text-muted-foreground py-12">
                 <p className="text-lg font-medium mb-2">검색 결과가 없습니다</p>
                 <p className="text-sm">다른 검색어를 입력해 보세요</p>
               </div>
-              {renderPopularArticles()}
+              {renderFeaturedArticles()}
             </>
           ) : (
             <div>
