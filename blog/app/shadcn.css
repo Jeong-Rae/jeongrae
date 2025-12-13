@@ -196,3 +196,69 @@
   --caution-text: var(--color-rose-300);
   --caution-icon: var(--color-rose-500);
 }
+
+@layer utilities {
+  .border-note-border {
+    border-color: var(--note-border);
+  }
+
+  .bg-note-background {
+    background-color: var(--note-background);
+  }
+
+  .text-note-text {
+    color: var(--note-text);
+  }
+
+  .text-note-icon {
+    color: var(--note-icon);
+  }
+
+  .border-tip-border {
+    border-color: var(--tip-border);
+  }
+
+  .bg-tip-background {
+    background-color: var(--tip-background);
+  }
+
+  .text-tip-text {
+    color: var(--tip-text);
+  }
+
+  .text-tip-icon {
+    color: var(--tip-icon);
+  }
+
+  .border-warning-border {
+    border-color: var(--warning-border);
+  }
+
+  .bg-warning-background {
+    background-color: var(--warning-background);
+  }
+
+  .text-warning-text {
+    color: var(--warning-text);
+  }
+
+  .text-warning-icon {
+    color: var(--warning-icon);
+  }
+
+  .border-caution-border {
+    border-color: var(--caution-border);
+  }
+
+  .bg-caution-background {
+    background-color: var(--caution-background);
+  }
+
+  .text-caution-text {
+    color: var(--caution-text);
+  }
+
+  .text-caution-icon {
+    color: var(--caution-icon);
+  }
+}

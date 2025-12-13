@@ -65,6 +65,30 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        note: {
+          border: "var(--note-border)",
+          background: "var(--note-background)",
+          text: "var(--note-text)",
+          icon: "var(--note-icon)",
+        },
+        tip: {
+          border: "var(--tip-border)",
+          background: "var(--tip-background)",
+          text: "var(--tip-text)",
+          icon: "var(--tip-icon)",
+        },
+        warning: {
+          border: "var(--warning-border)",
+          background: "var(--warning-background)",
+          text: "var(--warning-text)",
+          icon: "var(--warning-icon)",
+        },
+        caution: {
+          border: "var(--caution-border)",
+          background: "var(--caution-background)",
+          text: "var(--caution-text)",
+          icon: "var(--caution-icon)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
