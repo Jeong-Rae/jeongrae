@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleContent } from "@/components/article/article-content";
 import { RelatedSeries } from "@/components/related-series";
-import { getAllArticleMetas, getRelatedSeriesArticles } from "@/lib/mdx/articles";
+import {
+  getAllArticleMetas,
+  getRelatedSeriesArticles,
+} from "@/lib/mdx/articles";
 import { getCompiledArticleBySlug } from "@/lib/mdx/compile";
 
 type PageProps = {

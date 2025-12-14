@@ -35,11 +35,17 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
       <div className="p-4">
         <div className="flex flex-row-reverse gap-4">
           <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-            <img src={thumbnail} alt={seriesTitle} className="h-full w-full object-cover" />
+            <img
+              src={thumbnail}
+              alt={seriesTitle}
+              className="h-full w-full object-cover"
+            />
           </div>
           <div className="flex-1">
             <h4 className="font-bold text-sm mb-1">{seriesTitle}</h4>
-            <p className="text-muted-foreground text-xs leading-relaxed mb-2">{summary}</p>
+            <p className="text-muted-foreground text-xs leading-relaxed mb-2">
+              {summary}
+            </p>
             <Badge variant="secondary" className="mb-2 text-xs">
               {episodeCountLabel}
             </Badge>

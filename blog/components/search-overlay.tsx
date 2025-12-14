@@ -1,18 +1,110 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { isEmpty } from "es-toolkit/compat";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { ArticleItem } from "@/components/article/article-item";
 import { Input } from "@/components/ui/input";
-import type { ArticleMeta } from "@/lib/mdx/types";
-import { useBooleanState } from "@/hook/useBooleanState";
+import { useArticleSearch } from "@/hook/useArticleSearch";
 import { useInputState } from "@/hook/useInputState";
 import { useRangeIndexNavigator } from "@/hook/useIndexNavigator";
 import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";
+import type { ArticleMeta } from "@/lib/mdx/types";
 import { Logo } from "./header/logo";
-import { OverlayControllerComponent } from "overlay-kit";
+import type { OverlayControllerComponent } from "overlay-kit";
+
+type FeaturedArticlesProps = {
+  articles: ArticleMeta[];
+  activeIndex: number;
+  shouldHighlight: boolean;
+  onSelect: () => void;
+};
+
+const FeaturedArticlesSection = ({
+  articles,
+  activeIndex,
+  shouldHighlight,
+  onSelect,
+}: FeaturedArticlesProps) => {
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-4 text-foreground">
+        Featured 게시글
+      </h2>
+      <div className="space-y-1">
+        {articles.map((article, index) => (
+          <ArticleItem
+            key={article.slug}
+            article={article}
+            variant="overlay"
+            onSelect={onSelect}
+            active={shouldHighlight && index === activeIndex}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const LoadingState = () => {
+  return (
+    <div className="text-center text-muted-foreground py-12">
+      검색 중입니다...
+    </div>
+  );
+};
+
+const ErrorState = ({ message }: { message: string }) => {
+  return (
+    <div className="text-center text-destructive py-12">
+      <p className="text-lg font-medium mb-2">{message}</p>
+    </div>
+  );
+};
+
+const EmptyState = () => {
+  return (
+    <div className="text-center text-muted-foreground py-12">
+      <p className="text-lg font-medium mb-2">검색 결과가 없습니다</p>
+      <p className="text-sm">다른 검색어를 입력해 보세요</p>
+    </div>
+  );
+};
+
+type SearchResultsProps = {
+  articles: ArticleMeta[];
+  activeIndex: number;
+  shouldEnableNavigation: boolean;
+  onSelect: () => void;
+};
+
+const SearchResultsSection = ({
+  articles,
+  activeIndex,
+  shouldEnableNavigation,
+  onSelect,
+}: SearchResultsProps) => {
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground mb-4">
+        {articles.length}개의 결과
+      </p>
+      <div className="space-y-1">
+        {articles.map((article, index) => (
+          <ArticleItem
+            key={article.slug}
+            article={article}
+            variant="overlay"
+            onSelect={onSelect}
+            active={shouldEnableNavigation && index === activeIndex}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const SearchOverlay: OverlayControllerComponent = ({
   isOpen,
@@ -20,31 +112,43 @@ export const SearchOverlay: OverlayControllerComponent = ({
   unmount,
 }) => {
   const router = useRouter();
+
   const {
     value: query,
     onChange: handleQueryChange,
     reset: resetQuery,
   } = useInputState("");
-  const [articles, setArticles] = useState<ArticleMeta[]>([]);
-  const [featuredArticles, setFeaturedArticles] = useState<ArticleMeta[]>([]);
-  const {
-    value: isLoading,
-    setTrue: startLoading,
-    setFalse: stopLoading,
-  } = useBooleanState(false);
-  const [error, setError] = useState<string | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const hasQuery = useMemo(() => query.trim().length > 0, [query]);
-  const showEmptyState =
-    hasQuery && !isLoading && articles.length === 0 && !error;
+
+  const {
+    hasQuery,
+    featuredArticles,
+    articles,
+    isLoading,
+    error,
+    resetSearchState,
+  } = useArticleSearch({ isOpen, query });
+
+  const showEmptyState = useMemo(() => {
+    if (!hasQuery) return false;
+    if (isLoading) return false;
+    if (error) return false;
+    return isEmpty(articles);
+  }, [articles, error, hasQuery, isLoading]);
 
   const listToNavigate = useMemo(() => {
-    if (!hasQuery || showEmptyState) {
+    if (!hasQuery) {
       return featuredArticles;
     }
+
+    if (showEmptyState) {
+      return featuredArticles;
+    }
+
     return articles;
-  }, [hasQuery, showEmptyState, featuredArticles, articles]);
+  }, [articles, featuredArticles, hasQuery, showEmptyState]);
 
   const {
     index: activeIndex,
@@ -55,7 +159,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
   } = useRangeIndexNavigator<ArticleMeta>({ items: listToNavigate });
 
   const shouldEnableNavigation = useMemo(
-    () => listToNavigate.length > 0,
+    () => !isEmpty(listToNavigate),
     [listToNavigate],
   );
 
@@ -65,35 +169,71 @@ export const SearchOverlay: OverlayControllerComponent = ({
   }, [close, unmount]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (!isOpen) {
+      return;
     }
+
+    if (!inputRef.current) {
+      return;
+    }
+
+    inputRef.current.focus();
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      return;
+    }
+
+    resetQuery();
+    resetSearchState();
+  }, [isOpen, resetQuery, resetSearchState]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (listToNavigate.length === 0) {
+      return;
+    }
+
+    setActiveIndex(0);
+  }, [listToNavigate, setActiveIndex]);
+
   const handleNavigateToArticle = useCallback(() => {
-    if (!shouldEnableNavigation || !activeArticle) return;
+    if (!shouldEnableNavigation) {
+      return;
+    }
+
+    if (!activeArticle) {
+      return;
+    }
+
     router.push(`/articles/${activeArticle.slug}`);
     handleClose();
   }, [activeArticle, handleClose, router, shouldEnableNavigation]);
 
-  useKeyboardShortcuts(
-    [
-      {
-        keys: "Escape",
-        handler: handleClose,
-      },
-    ],
-    {
-      enabled: isOpen,
-    },
-  );
+  useKeyboardShortcuts([{ keys: "Escape", handler: handleClose }], {
+    enabled: isOpen,
+  });
 
   useKeyboardShortcuts(
     [
       {
         keys: ["ArrowDown", "Down"],
         handler: () => {
-          if (!shouldEnableNavigation) return;
+          if (!shouldEnableNavigation) {
+            return;
+          }
           goNextArticle();
         },
         preventDefault: shouldEnableNavigation,
@@ -101,7 +241,9 @@ export const SearchOverlay: OverlayControllerComponent = ({
       {
         keys: ["ArrowUp", "Up"],
         handler: () => {
-          if (!shouldEnableNavigation) return;
+          if (!shouldEnableNavigation) {
+            return;
+          }
           goPrevArticle();
         },
         preventDefault: shouldEnableNavigation,
@@ -118,107 +260,57 @@ export const SearchOverlay: OverlayControllerComponent = ({
     },
   );
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
+  const renderContent = () => {
+    if (error) {
+      return <ErrorState message={error} />;
     }
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      resetQuery();
-      setArticles([]);
-      setError(null);
-      return;
+    if (isLoading) {
+      return <LoadingState />;
     }
 
-    fetch(`/api/search?query=`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("추천 게시글을 불러오지 못했습니다.");
-        const payload = (await response.json()) as { articles?: ArticleMeta[] };
-        setFeaturedArticles(payload.articles ?? []);
-      })
-      .catch(() => {
-      });
-  }, [isOpen, resetQuery]);
-
-  useEffect(() => {
     if (!hasQuery) {
-      setArticles([]);
-      setError(null);
-      return undefined;
-    }
-
-    const controller = new AbortController();
-    const delay = setTimeout(() => {
-      startLoading();
-      fetch(`/api/search?query=${encodeURIComponent(query)}`, {
-        method: "GET",
-        signal: controller.signal,
-      })
-        .then(async (response) => {
-          if (!response.ok) {
-            throw new Error("검색 요청에 실패했습니다.");
+      return (
+        <FeaturedArticlesSection
+          articles={featuredArticles}
+          activeIndex={activeIndex}
+          shouldHighlight={
+            shouldEnableNavigation && listToNavigate === featuredArticles
           }
-          const payload = (await response.json()) as {
-            articles?: ArticleMeta[];
-          };
-          setArticles(payload.articles ?? []);
-          setError(null);
-        })
-        .catch((fetchError: unknown) => {
-          if ((fetchError as Error).name === "AbortError") return;
-          setError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-          setArticles([]);
-        })
-        .finally(() => stopLoading());
-    }, 200);
-
-    return () => {
-      clearTimeout(delay);
-      controller.abort();
-    };
-  }, [hasQuery, isOpen, query, startLoading, stopLoading]);
-
-  useEffect(() => {
-    if (listToNavigate.length === 0) return;
-    if (listToNavigate === featuredArticles && hasQuery) {
-      setActiveIndex(0);
-      return;
+          onSelect={handleClose}
+        />
+      );
     }
-    if (listToNavigate === articles) {
-      setActiveIndex(0);
-    }
-  }, [listToNavigate, articles, featuredArticles, hasQuery, setActiveIndex]);
 
-  const renderFeaturedArticles = () => (
-    <div>
-      <h2 className="text-lg font-semibold mb-4 text-foreground">
-        Featured 게시글
-      </h2>
-      <div className="space-y-1">
-        {featuredArticles.map((article, index) => (
-          <ArticleItem
-            key={article.slug}
-            article={article}
-            variant="overlay"
-            onSelect={handleClose}
-            active={
-              shouldEnableNavigation &&
-              (listToNavigate === featuredArticles) &&
-              index === activeIndex
+    if (showEmptyState) {
+      return (
+        <>
+          <EmptyState />
+          <FeaturedArticlesSection
+            articles={featuredArticles}
+            activeIndex={activeIndex}
+            shouldHighlight={
+              shouldEnableNavigation && listToNavigate === featuredArticles
             }
+            onSelect={handleClose}
           />
-        ))}
-      </div>
-    </div>
-  );
+        </>
+      );
+    }
 
-  if (!isOpen) return null;
+    return (
+      <SearchResultsSection
+        articles={articles}
+        activeIndex={activeIndex}
+        shouldEnableNavigation={shouldEnableNavigation}
+        onSelect={handleClose}
+      />
+    );
+  };
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div
@@ -252,44 +344,7 @@ export const SearchOverlay: OverlayControllerComponent = ({
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {error ? (
-            <div className="text-center text-destructive py-12">
-              <p className="text-lg font-medium mb-2">{error}</p>
-            </div>
-          ) : isLoading ? (
-            <div className="text-center text-muted-foreground py-12">
-              검색 중입니다...
-            </div>
-          ) : !hasQuery ? (
-            renderFeaturedArticles()
-          ) : showEmptyState ? (
-            <>
-              <div className="text-center text-muted-foreground py-12">
-                <p className="text-lg font-medium mb-2">검색 결과가 없습니다</p>
-                <p className="text-sm">다른 검색어를 입력해 보세요</p>
-              </div>
-              {renderFeaturedArticles()}
-            </>
-          ) : (
-            <div>
-              <p className="text-sm text-muted-foreground mb-4">
-                {articles.length}개의 결과
-              </p>
-              <div className="space-y-1">
-                {articles.map((article, index) => (
-                  <ArticleItem
-                    key={article.slug}
-                    article={article}
-                    variant="overlay"
-                    onSelect={handleClose}
-                    active={shouldEnableNavigation && index === activeIndex}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <div className="flex-1 overflow-y-auto">{renderContent()}</div>
       </div>
     </div>
   );

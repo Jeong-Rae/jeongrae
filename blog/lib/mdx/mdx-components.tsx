@@ -48,5 +48,5 @@ export const mdxComponents: MDXComponents = {
   code: TypographyInlineCode,
   a: TypographyLink,
   Image: (props) => <Image {...props} wide="75" border />,
-  Callout
+  Callout,
 };

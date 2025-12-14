@@ -39,16 +39,19 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
   const length = getNavigatorLength(params);
   const isCircleMode = mode === "circle";
 
-  const clampIndex = useCallback((raw: number): number => {
-    if (length <= 0) return 0;
+  const clampIndex = useCallback(
+    (raw: number): number => {
+      if (length <= 0) return 0;
 
-    if (isCircleMode) {
-      const value = modulo(raw, length);
-      return value as number;
-    }
+      if (isCircleMode) {
+        const value = modulo(raw, length);
+        return value as number;
+      }
 
-    return clamp(raw, 0, length - 1);
-  }, [length, isCircleMode]);
+      return clamp(raw, 0, length - 1);
+    },
+    [length, isCircleMode],
+  );
 
   const [index, setIndexState] = useState(() => clampIndex(initialIndex));
 
@@ -70,12 +73,15 @@ export function useIndexNavigator<T>(params: UseIndexNavigatorParams<T>) {
     return index > 0;
   }, [canMove, mode, index]);
 
-  const setIndex = useCallback((next: number | ((prev: number) => number)) => {
-    setIndexState((prev) => {
-      const target = isFunction(next) ? next(prev) : next;
-      return clampIndex(target);
-    });
-  }, [clampIndex]);
+  const setIndex = useCallback(
+    (next: number | ((prev: number) => number)) => {
+      setIndexState((prev) => {
+        const target = isFunction(next) ? next(prev) : next;
+        return clampIndex(target);
+      });
+    },
+    [clampIndex],
+  );
 
   const goNext = useCallback(() => {
     if (canGoNext) setIndex((p) => p + 1);

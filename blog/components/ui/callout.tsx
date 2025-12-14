@@ -1,9 +1,5 @@
 import * as React from "react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 import {
@@ -14,12 +10,7 @@ import {
   XCircleIcon,
 } from "lucide-react";
 
-export type CalloutType =
-  | "note"
-  | "tip"
-  | "important"
-  | "warning"
-  | "caution";
+export type CalloutType = "note" | "tip" | "important" | "warning" | "caution";
 
 type CalloutPreset = {
   icon: React.ElementType;
@@ -94,7 +85,9 @@ export function CalloutRoot({
   const Icon = preset.icon;
 
   return (
-    <Alert className={cn("flex items-start gap-3", preset.className, className)}>
+    <Alert
+      className={cn("flex items-start gap-3", preset.className, className)}
+    >
       <Icon className="mt-0.5 size-5 shrink-0" />
 
       <div className="space-y-1">
