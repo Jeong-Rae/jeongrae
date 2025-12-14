@@ -3,7 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { orderBy } from "es-toolkit";
 import { clamp } from "@lyght/ts";
-import { slugify, resetSlugger } from "./slug";
+import { slugify, resetSlugger, slugifyOnce } from "./slug";
 import type { ArticleMeta, ArticleFrontmatter } from "./types";
 
 const ARTICLES_PATH = path.join(process.cwd(), "content", "articles");
@@ -29,7 +29,7 @@ export function getAllArticleMetas(): ArticleMeta[] {
 
     const slug = slugify(frontmatter.title);
     const seriesSlug = frontmatter.series
-      ? slugify(frontmatter.series)
+      ? slugifyOnce(frontmatter.series)
       : undefined;
 
     return {
