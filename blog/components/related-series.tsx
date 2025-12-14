@@ -1,17 +1,19 @@
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { Repeat } from "@/lib/react/repeat";
+import Link from "next/link";
+import { Image } from "@/components/ui/image";
 
 export function RelatedSeries({ articles }: { articles: ArticleMeta[] }) {
   return (
     <section>
       <h2 className="text-[24px] font-bold text-[#191f28] mb-8">
-        같이 보면 좋은 시리즈
+        이어서 보면 글
       </h2>
 
       <div className="space-y-6">
         <Repeat.Each each={articles} itemKey={(article) => article.slug}>
           {(article) => (
-            <a
+            <Link
               href={`/articles/${article.slug}`}
               className="group flex gap-6 py-6 border-b border-border last:border-0 hover:opacity-80 transition-opacity"
             >
@@ -29,15 +31,15 @@ export function RelatedSeries({ articles }: { articles: ArticleMeta[] }) {
                 </div>
               </div>
               <div className="flex-shrink-0 w-[130px] h-[90px] rounded-lg overflow-hidden">
-                <img
-                  src={
-                    article.thumbnail || "/placeholder.svg?height=90&width=130"
-                  }
+                <Image
+                  src={article.thumbnail ?? "/placeholder.svg"}
                   alt={article.title}
+                  width={130}
+                  height={90}
                   className="w-full h-full object-cover"
                 />
               </div>
-            </a>
+            </Link>
           )}
         </Repeat.Each>
       </div>

@@ -5,10 +5,11 @@ import type { SeriesGroup } from "@/lib/mdx/articles";
 import { useCircleIndexNavigator } from "@/hook/useIndexNavigator";
 import { useScheduleEffect } from "@/hook/useScheduleEffect";
 import { isEmpty, isNil } from "es-toolkit/compat";
+import Link from "next/link";
 
 export function SeriesCard({ series }: { series: SeriesGroup }) {
   const { series: seriesTitle, articles } = series;
-  const episodes = articles.map(({ title }) => title);
+  const episodes = articles.map(({ title, slug }) => ({ title, slug }));
   const latestArticle = articles[articles.length - 1];
   const { thumbnail = "/placeholder.svg", summary = "" } = latestArticle ?? {};
 
@@ -20,7 +21,7 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
     item: currentEpisode,
     length: episodeLength,
     goNext,
-  } = useCircleIndexNavigator<string>({ items: episodes });
+  } = useCircleIndexNavigator<{ title: string; slug: string }>({ items: episodes });
 
   useScheduleEffect({
     every: "3s",
@@ -28,7 +29,8 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
     until: () => episodeLength <= 1,
   });
 
-  const episodeTitle = isNil(currentEpisode) ? episodes[0] : currentEpisode;
+  const episodeTitle = isNil(currentEpisode) ? episodes[0].title : currentEpisode.title;
+  const titleSlug = (currentEpisode && currentEpisode.slug) ?? latestArticle?.slug ?? "";
 
   return (
     <div className="border border-border rounded-lg hover:border-foreground/20 transition-colors">
@@ -49,7 +51,9 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
             <Badge variant="secondary" className="mb-2 text-xs">
               {episodeCountLabel}
             </Badge>
-            <div className="text-foreground/70 text-xs">{episodeTitle}</div>
+            <Link href={`/articles/${titleSlug}`}>
+              <div className="text-foreground/70 text-xs">{episodeTitle}</div>
+            </Link>
           </div>
         </div>
       </div>

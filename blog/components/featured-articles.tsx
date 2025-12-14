@@ -11,7 +11,7 @@ export function FeaturedArticles() {
 
   return (
     <div>
-      <h3 className="font-bold text-lg mb-4 text-[#191f28]">Featured 글</h3>
+      <h3 className="font-bold text-lg mb-4 text-[#191f28]">Featured</h3>
       <div className="space-y-4">
         <Repeat.Each
           each={featuredArticles}
