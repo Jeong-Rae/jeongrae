@@ -14,6 +14,7 @@ import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { Logo } from "./header/logo";
 import type { OverlayControllerComponent } from "overlay-kit";
+import { Repeat } from "@/lib/react/repeat";
 
 type FeaturedArticlesProps = {
   articles: ArticleMeta[];
@@ -33,8 +34,8 @@ const FeaturedArticlesSection = ({
       <h2 className="text-lg font-semibold mb-4 text-foreground">
         추천 게시글
       </h2>
-      <div className="space-y-1">
-        {articles.map((article, index) => (
+      <Repeat.Each each={articles} itemKey={(article) => article.slug}>
+        {(article, index) => (
           <ArticleItem
             key={article.slug}
             article={article}
@@ -42,8 +43,8 @@ const FeaturedArticlesSection = ({
             onSelect={onSelect}
             isActive={shouldHighlight && index === activeIndex}
           />
-        ))}
-      </div>
+        )}
+      </Repeat.Each>
     </div>
   );
 };
@@ -91,8 +92,8 @@ const SearchResultsSection = ({
       <p className="text-sm text-muted-foreground mb-4">
         {articles.length}개의 결과
       </p>
-      <div className="space-y-1">
-        {articles.map((article, index) => (
+      <Repeat.Each each={articles} itemKey={(article) => article.slug}>
+        {(article, index) => (
           <ArticleItem
             key={article.slug}
             article={article}
@@ -100,8 +101,8 @@ const SearchResultsSection = ({
             onSelect={onSelect}
             isActive={shouldEnableNavigation && index === activeIndex}
           />
-        ))}
-      </div>
+        )}
+      </Repeat.Each>
     </div>
   );
 };

@@ -38,10 +38,10 @@ const sharedStyles = {
   headingWrapper: "space-y-2",
   title:
     "font-bold text-[20px] leading-[1.6] text-[var(--color-slate-700)] transition-colors line-clamp-2 group-hover:text-primary",
-  summary: "text-sm leading-[1.6] text-[var(--color-slate-500)] line-clamp-2 mt-0",
+  summary:
+    "text-sm leading-[1.6] text-[var(--color-slate-500)] line-clamp-2 mt-0",
   meta: "text-xs leading-[1.6] text-[var(--color-slate-500)] mt-3",
-  imageWrapper:
-    "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
+  imageWrapper: "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
   imageClassName:
     "w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.2]",
   imageSize: { width: 130, height: 130 },
@@ -97,7 +97,9 @@ export function ArticleItem({
           >
             {title}
           </Typography.H5>
-          {summary && <Typography.P className={styles.summary}>{summary}</Typography.P>}
+          {summary && (
+            <Typography.P className={styles.summary}>{summary}</Typography.P>
+          )}
         </div>
         <div className={styles.meta}>
           {uploadAt} {author && `· ${author}`}

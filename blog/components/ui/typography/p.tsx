@@ -1,9 +1,20 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
-export function TypographyP({ children, className }: { children: ReactNode, className?: string }) {
+export function TypographyP({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <p className={cn("leading-7 [&:not(:first-child)]:mt-6 text-muted-foreground", className)}>
+    <p
+      className={cn(
+        "leading-7 [&:not(:first-child)]:mt-6 text-muted-foreground",
+        className,
+      )}
+    >
       {children}
     </p>
   );

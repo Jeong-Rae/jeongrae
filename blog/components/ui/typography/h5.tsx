@@ -4,7 +4,10 @@ import { cn } from "@/lib/utils";
 export function TypographyH5({
   children,
   className,
-}: { children: ReactNode; className?: string }) {
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <h5
       className={cn(
