@@ -1,6 +1,6 @@
-- [ ] Artice Item 사이 구분선 제거
-- [ ] 이미지 20% 정도 확대
-- [ ] Article Item 색상 톤 정리
+- [x] Artice Item 사이 구분선 제거
+- [x] 이미지 20% 정도 확대
+- [x] Article Item 색상 톤 정리
 - [ ] 시리즈 일단 디스에이블 (안보이게하기)
 - [ ] Tab 너미 균일하게 보장하기
 - [ ] Primary 색상 맞추기.

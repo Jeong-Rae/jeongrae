@@ -18,7 +18,7 @@ export function ArticleList({ articles }: ArticleListProps) {
   return (
     <div className="space-y-6">
       <Repeat.Each each={articles} itemKey={(article) => article.slug}>
-        {(article) => <ArticleItem article={article} />}
+        {(article) => <ArticleItem article={article} isActive={false} />}
       </Repeat.Each>
     </div>
   );

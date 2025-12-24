@@ -10,13 +10,14 @@ import Mesh185_1 from "@/public/mesh-185-1.png";
 import Mesh185_2 from "@/public/mesh-185-2.png";
 import Mesh757_1 from "@/public/mesh-757-1.png";
 import Mesh757_2 from "@/public/mesh-757-2.png";
+import { Typography } from "../ui/typography";
 
 type ArticleItemProps = {
   article: ArticleMeta;
   variant?: "list" | "overlay";
   onSelect?: () => void;
   className?: string;
-  active?: boolean;
+  isActive: boolean;
 };
 
 const fallbackThumbnails = [Mesh185_1, Mesh185_2, Mesh757_1, Mesh757_2];
@@ -30,35 +31,25 @@ function pickMeshBySlug(slug: string) {
   return fallbackThumbnails[selectedIndex];
 }
 
+const sharedStyles = {
+  container:
+    "group flex gap-6 py-6 px-2 rounded-lg transition-colors hover:bg-muted/50",
+  content: "flex-1 flex flex-col justify-between min-w-0",
+  headingWrapper: "space-y-2",
+  title:
+    "font-bold text-[20px] leading-[1.6] text-[var(--color-slate-700)] transition-colors line-clamp-2 group-hover:text-primary",
+  summary: "text-sm leading-[1.6] text-[var(--color-slate-500)] line-clamp-2 mt-0",
+  meta: "text-xs leading-[1.6] text-[var(--color-slate-500)] mt-3",
+  imageWrapper:
+    "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
+  imageClassName:
+    "w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.2]",
+  imageSize: { width: 130, height: 130 },
+};
+
 const variantStyles = {
-  list: {
-    container:
-      "group flex gap-6 py-6 hover:opacity-80 transition-opacity",
-    content: "flex-1 flex flex-col justify-between min-w-0",
-    headingWrapper: "space-y-2",
-    title:
-      "font-bold text-[20px] leading-[1.6] text-[var(--color-slate-700)] group-hover:text-[#3182f6] transition-colors",
-    summary: "text-sm leading-[1.6] text-[var(--color-slate-500)]",
-    meta: "text-xs leading-[1.6] text-[var(--color-slate-500)] mt-3",
-    imageWrapper:
-      "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
-    imageClassName:
-      "w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.2]",
-    imageSize: { width: 130, height: 130 },
-  },
-  overlay: {
-    container:
-      "flex items-start justify-between gap-4 py-5 border-b border-border hover:bg-muted/50 transition-colors px-2 rounded-lg",
-    content: "flex-1 min-w-0",
-    headingWrapper: "space-y-2",
-    title:
-      "font-semibold text-foreground mb-2 hover:text-primary transition-colors line-clamp-2",
-    summary: "text-sm text-muted-foreground line-clamp-2 mb-3",
-    meta: "text-xs text-muted-foreground",
-    imageWrapper: "flex-shrink-0",
-    imageClassName: "rounded-lg object-cover w-[130px] h-[90px]",
-    imageSize: { width: 130, height: 90 },
-  },
+  list: sharedStyles,
+  overlay: sharedStyles,
 } satisfies Record<
   NonNullable<ArticleItemProps["variant"]>,
   {
@@ -79,7 +70,7 @@ export function ArticleItem({
   variant = "list",
   onSelect,
   className,
-  active,
+  isActive,
 }: ArticleItemProps) {
   const styles = variantStyles[variant];
   const { slug, thumbnail, title, summary, uploadAt, author } = article;
@@ -92,23 +83,21 @@ export function ArticleItem({
       className={cn(
         styles.container,
         {
-          "opacity-80": active && variant === "list",
-          "bg-muted/50": active && variant === "overlay",
+          "bg-muted/50": isActive,
         },
         className,
       )}
     >
       <div className={styles.content}>
         <div className={styles.headingWrapper}>
-          <h3
+          <Typography.H5
             className={cn(styles.title, {
-              "text-[#3182f6]": active && variant === "list",
-              "text-primary": active && variant === "overlay",
+              "text-primary": isActive,
             })}
           >
             {title}
-          </h3>
-          {summary && <p className={styles.summary}>{summary}</p>}
+          </Typography.H5>
+          {summary && <Typography.P className={styles.summary}>{summary}</Typography.P>}
         </div>
         <div className={styles.meta}>
           {uploadAt} {author && `· ${author}`}
@@ -120,7 +109,9 @@ export function ArticleItem({
           alt={title}
           width={styles.imageSize.width}
           height={styles.imageSize.height}
-          className={styles.imageClassName}
+          className={cn(styles.imageClassName, {
+            "scale-[1.2]": isActive,
+          })}
         />
       </div>
     </Link>

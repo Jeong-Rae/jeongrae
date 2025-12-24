@@ -31,7 +31,7 @@ const FeaturedArticlesSection = ({
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4 text-foreground">
-        Featured 게시글
+        추천 게시글
       </h2>
       <div className="space-y-1">
         {articles.map((article, index) => (
@@ -40,7 +40,7 @@ const FeaturedArticlesSection = ({
             article={article}
             variant="overlay"
             onSelect={onSelect}
-            active={shouldHighlight && index === activeIndex}
+            isActive={shouldHighlight && index === activeIndex}
           />
         ))}
       </div>
@@ -98,7 +98,7 @@ const SearchResultsSection = ({
             article={article}
             variant="overlay"
             onSelect={onSelect}
-            active={shouldEnableNavigation && index === activeIndex}
+            isActive={shouldEnableNavigation && index === activeIndex}
           />
         ))}
       </div>
