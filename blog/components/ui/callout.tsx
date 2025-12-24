@@ -90,17 +90,12 @@ export function CalloutRoot({
   className,
 }: CalloutProps) {
   const normalizedType = isString(type) ? type.toLowerCase() : "note";
-  const preset =   CALLOUT_PRESET[normalizedType as CalloutType] ?? CALLOUT_PRESET.note;
+  const preset =
+    CALLOUT_PRESET[normalizedType as CalloutType] ?? CALLOUT_PRESET.note;
   const Icon = preset.icon;
 
   return (
-    <Alert
-      className={cn(
-        "my-6 first:mt-0",
-        preset.className,
-        className,
-      )}
-    >
+    <Alert className={cn("my-6 first:mt-0", preset.className, className)}>
       <div className="space-y-2">
         <AlertTitle
           className={cn(
@@ -112,9 +107,7 @@ export function CalloutRoot({
           <Icon className={cn("size-5 shrink-0", preset.iconClassName)} />
           {title}
         </AlertTitle>
-        <AlertDescription className="ml-[26px]">
-          {children}
-        </AlertDescription>
+        <AlertDescription className="ml-[26px]">{children}</AlertDescription>
       </div>
     </Alert>
   );

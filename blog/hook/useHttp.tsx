@@ -21,7 +21,7 @@ export type UseHttpParams<TResponse> = {
   options?: UseHttpOptions;
 };
 
-export const useHttp = <TResponse>(params: UseHttpParams<TResponse>) => {
+export function useHttp<TResponse>(params: UseHttpParams<TResponse>) {
   const { request, deps = [], options } = params;
 
   const savedRequest = useRef(request);
@@ -107,4 +107,4 @@ export const useHttp = <TResponse>(params: UseHttpParams<TResponse>) => {
     }),
     [abort, execute, state],
   );
-};
+}

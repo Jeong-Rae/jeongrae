@@ -21,7 +21,9 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
     item: currentEpisode,
     length: episodeLength,
     goNext,
-  } = useCircleIndexNavigator<{ title: string; slug: string }>({ items: episodes });
+  } = useCircleIndexNavigator<{ title: string; slug: string }>({
+    items: episodes,
+  });
 
   useScheduleEffect({
     every: "3s",
@@ -29,8 +31,11 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
     until: () => episodeLength <= 1,
   });
 
-  const episodeTitle = isNil(currentEpisode) ? episodes[0].title : currentEpisode.title;
-  const titleSlug = (currentEpisode && currentEpisode.slug) ?? latestArticle?.slug ?? "";
+  const episodeTitle = isNil(currentEpisode)
+    ? episodes[0].title
+    : currentEpisode.title;
+  const titleSlug =
+    (currentEpisode && currentEpisode.slug) ?? latestArticle?.slug ?? "";
 
   return (
     <div className="border border-border rounded-lg hover:border-foreground/20 transition-colors">
