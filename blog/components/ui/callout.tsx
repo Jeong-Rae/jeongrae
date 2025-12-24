@@ -6,42 +6,50 @@ import {
   AlertTriangleIcon,
   InfoIcon,
   LightbulbIcon,
-  StarIcon,
-  XCircleIcon,
+  MessageSquareWarningIcon,
+  OctagonAlertIcon,
 } from "lucide-react";
+import { isString } from "es-toolkit";
 
 export type CalloutType = "note" | "tip" | "important" | "warning" | "caution";
 
 type CalloutPreset = {
   icon: React.ElementType;
   className: string;
+  titleClassName: string;
+  iconClassName: string;
 };
 
 const CALLOUT_PRESET: Record<CalloutType, CalloutPreset> = {
   note: {
     icon: InfoIcon,
-    className:
-      "border-note-border bg-note-background text-note-text [&>svg]:text-note-icon",
+    className: "text-note-text",
+    titleClassName: "text-note-text",
+    iconClassName: "text-note-icon",
   },
   tip: {
     icon: LightbulbIcon,
-    className:
-      "border-tip-border bg-tip-background text-tip-text [&>svg]:text-tip-icon",
+    className: "text-tip-text",
+    titleClassName: "text-tip-text",
+    iconClassName: "text-tip-icon",
   },
   important: {
-    icon: StarIcon,
-    className:
-      "border-primary/30 bg-primary/10 text-primary [&>svg]:text-primary",
+    icon: MessageSquareWarningIcon,
+    className: "text-primary",
+    titleClassName: "text-primary",
+    iconClassName: "text-primary",
   },
   warning: {
     icon: AlertTriangleIcon,
-    className:
-      "border-warning-border bg-warning-background text-warning-text [&>svg]:text-warning-icon",
+    className: "text-warning-text",
+    titleClassName: "text-warning-text",
+    iconClassName: "text-warning-icon",
   },
   caution: {
-    icon: XCircleIcon,
-    className:
-      "border-caution-border bg-caution-background text-caution-text [&>svg]:text-caution-icon",
+    icon: OctagonAlertIcon,
+    className: "text-caution-text",
+    titleClassName: "text-caution-text",
+    iconClassName: "text-caution-icon",
   },
 };
 
@@ -49,7 +57,7 @@ const CALLOUT_PRESET: Record<CalloutType, CalloutPreset> = {
  * Callout 컴포넌트 props
  */
 export type CalloutProps = {
-  type?: CalloutType;
+  type?: CalloutType | string;
   title?: string;
   children: React.ReactNode;
   className?: string;
@@ -81,22 +89,32 @@ export function CalloutRoot({
   children,
   className,
 }: CalloutProps) {
-  const preset = CALLOUT_PRESET[type];
+  const normalizedType = isString(type) ? type.toLowerCase() : "note";
+  const preset =   CALLOUT_PRESET[normalizedType as CalloutType] ?? CALLOUT_PRESET.note;
   const Icon = preset.icon;
 
   return (
     <Alert
       className={cn(
-        "my-6 flex items-start gap-3 first:mt-0",
+        "my-6 first:mt-0",
         preset.className,
         className,
       )}
     >
-      <Icon className="mt-0.5 size-5 shrink-0" />
-
-      <div className="space-y-1">
-        {<AlertTitle>{title}</AlertTitle>}
-        <AlertDescription>{children}</AlertDescription>
+      <div className="space-y-2">
+        <AlertTitle
+          className={cn(
+            "mb-0 flex items-center gap-2 text-base text-sm tracking-tight",
+            preset.titleClassName,
+          )}
+          style={{ marginLeft: "-1px" }}
+        >
+          <Icon className={cn("size-5 shrink-0", preset.iconClassName)} />
+          {title}
+        </AlertTitle>
+        <AlertDescription className="ml-[26px]">
+          {children}
+        </AlertDescription>
       </div>
     </Alert>
   );
