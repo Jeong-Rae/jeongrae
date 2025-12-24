@@ -33,16 +33,17 @@ function pickMeshBySlug(slug: string) {
 const variantStyles = {
   list: {
     container:
-      "group flex gap-6 py-6 border-b border-border last:border-0 hover:opacity-80 transition-opacity",
+      "group flex gap-6 py-6 hover:opacity-80 transition-opacity",
     content: "flex-1 flex flex-col justify-between min-w-0",
     headingWrapper: "space-y-2",
     title:
-      "font-bold text-[20px] leading-[1.6] text-[var(--color-shark-800)] group-hover:text-[#3182f6] transition-colors",
-    summary: "text-sm leading-[1.6] text-[var(--color-shark-700)]",
-    meta: "text-xs leading-[1.6] text-[var(--color-shark-700)] mt-3",
+      "font-bold text-[20px] leading-[1.6] text-[var(--color-slate-700)] group-hover:text-[#3182f6] transition-colors",
+    summary: "text-sm leading-[1.6] text-[var(--color-slate-500)]",
+    meta: "text-xs leading-[1.6] text-[var(--color-slate-500)] mt-3",
     imageWrapper:
       "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
-    imageClassName: "w-full h-full object-cover",
+    imageClassName:
+      "w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.2]",
     imageSize: { width: 130, height: 130 },
   },
   overlay: {

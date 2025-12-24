@@ -7,7 +7,7 @@
 
 pre.shiki,
 pre[data-theme] {
-  background-color: var(--shiki-light-bg);
+  /* background-color: var(--shiki-light-bg); */
   color: var(--shiki-light);
 }
 
