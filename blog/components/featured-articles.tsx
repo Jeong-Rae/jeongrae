@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { getFeaturedArticles } from "@/lib/mdx/articles";
 import { Repeat } from "@/lib/react/repeat";
+import { Typography } from "./ui/typography";
 
 export function FeaturedArticles() {
   const featuredArticles = getFeaturedArticles();
@@ -11,7 +12,9 @@ export function FeaturedArticles() {
 
   return (
     <div>
-      <h3 className="font-bold text-lg mb-4 text-[#191f28]">Featured</h3>
+      <Typography.H5 className="font-bold text-lg mb-4 text-[#191f28]">
+        추천글
+      </Typography.H5>
       <div className="space-y-4">
         <Repeat.Each
           each={featuredArticles}
@@ -28,9 +31,9 @@ export function FeaturedArticles() {
                     {featured}
                   </span>
                   <div>
-                    <h4 className="font-medium text-sm leading-snug mb-1 text-balance text-[#4e5968] group-hover:text-[#3182f6] transition-colors">
+                    <Typography.H6 className="font-medium text-sm leading-snug mb-1 text-balance text-[#4e5968] group-hover:text-[#3182f6] transition-colors mt-0">
                       {title}
-                    </h4>
+                    </Typography.H6>
                     <p className="text-[#6b7684] text-xs">
                       {author || "unknown"}
                     </p>
