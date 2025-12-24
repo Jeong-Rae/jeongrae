@@ -1,3 +1,4 @@
+import type { ComponentPropsWithoutRef } from "react";
 import type { MDXComponents } from "mdx/types";
 
 import { Image } from "@/components/ui/image";
@@ -17,6 +18,7 @@ import {
   TypographyMuted,
   TypographyOrderedList,
   TypographyP,
+  TypographyPre,
   TypographySmall,
   TypographyTable,
   TypographyTbody,
@@ -26,6 +28,18 @@ import {
   TypographyTr,
 } from "@/components/ui/typography";
 import { Callout } from "@/components/ui/callout";
+
+function MdxCode({ className, ...props }: ComponentPropsWithoutRef<"code">) {
+  const dataLanguage = (props as { "data-language"?: string })["data-language"];
+  const isBlockCode =
+    className?.includes("language-") || typeof dataLanguage === "string";
+
+  if (isBlockCode) {
+    return <code className={className} {...props} />;
+  }
+
+  return <TypographyInlineCode className={className} {...props} />;
+}
 
 export const mdxComponents: MDXComponents = {
   h1: (props) => <TypographyH1 {...props} withBorder={false} />,
@@ -45,7 +59,8 @@ export const mdxComponents: MDXComponents = {
   tr: TypographyTr,
   th: TypographyTh,
   td: TypographyTd,
-  code: TypographyInlineCode,
+  pre: TypographyPre,
+  code: MdxCode,
   a: TypographyLink,
   Image: (props) => <Image {...props} wide="75" border />,
   Callout,

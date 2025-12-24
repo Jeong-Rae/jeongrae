@@ -86,7 +86,11 @@ export function CalloutRoot({
 
   return (
     <Alert
-      className={cn("flex items-start gap-3", preset.className, className)}
+      className={cn(
+        "my-6 flex items-start gap-3 first:mt-0",
+        preset.className,
+        className,
+      )}
     >
       <Icon className="mt-0.5 size-5 shrink-0" />
 

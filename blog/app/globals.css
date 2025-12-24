@@ -4,3 +4,25 @@
 @import "./foundation.css";
 
 @custom-variant dark (&:is(.dark *));
+
+pre.shiki,
+pre[data-theme] {
+  background-color: var(--shiki-light-bg);
+  color: var(--shiki-light);
+}
+
+.dark pre.shiki,
+.dark pre[data-theme] {
+  background-color: var(--shiki-dark-bg);
+  color: var(--shiki-dark);
+}
+
+pre.shiki span,
+pre[data-theme] span {
+  color: var(--shiki-light);
+}
+
+.dark pre.shiki span,
+.dark pre[data-theme] span {
+  color: var(--shiki-dark);
+}

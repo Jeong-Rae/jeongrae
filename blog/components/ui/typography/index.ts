@@ -13,6 +13,7 @@ import { TypographyList } from "./list";
 import { TypographyMuted } from "./muted";
 import { TypographyOrderedList } from "./ordered-list";
 import { TypographyP } from "./p";
+import { TypographyPre } from "./pre";
 import { TypographySmall } from "./small";
 import { TypographyTable } from "./table";
 import { TypographyTbody } from "./tbody";
@@ -29,6 +30,7 @@ const Typography = {
   H5: TypographyH5,
   H6: TypographyH6,
   P: TypographyP,
+  Pre: TypographyPre,
   Blockquote: TypographyBlockquote,
   List: TypographyList,
   OrderedList: TypographyOrderedList,
@@ -63,6 +65,7 @@ export {
   TypographyMuted,
   TypographyOrderedList,
   TypographyP,
+  TypographyPre,
   TypographySmall,
   TypographyTable,
   TypographyTbody,
