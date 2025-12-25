@@ -37,9 +37,9 @@ const sharedStyles = {
   content: "flex-1 flex flex-col justify-between min-w-0",
   headingWrapper: "space-y-2",
   title:
-    "font-bold text-[20px] leading-[1.6] text-[var(--color-slate-700)] transition-colors line-clamp-2 group-hover:text-primary",
-  summary: "text-sm leading-[1.6] text-[var(--color-slate-500)] line-clamp-2",
-  meta: "text-xs leading-[1.6] text-[var(--color-slate-500)] mt-3",
+    "font-bold text-[20px] leading-[1.6] text-text-strong transition-colors line-clamp-2 group-hover:text-primary",
+  summary: "text-sm leading-[1.6] text-text-muted line-clamp-2",
+  meta: "text-xs leading-[1.6] text-text-muted mt-3",
   imageWrapper: "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
   imageClassName:
     "w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.2]",
