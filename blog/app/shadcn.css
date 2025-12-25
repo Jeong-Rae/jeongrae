@@ -1,17 +1,4 @@
 :root {
-  /* Royal Blue Palette */
-  --color-royal-blue-50: #f1f3fd;
-  --color-royal-blue-100: #e0e5f9;
-  --color-royal-blue-200: #c7d1f6;
-  --color-royal-blue-300: #a1b4ef;
-  --color-royal-blue-400: #748ce6;
-  --color-royal-blue-500: #5165dd;
-  --color-royal-blue-600: #3f4ad1;
-  --color-royal-blue-700: #363abf;
-  --color-royal-blue-800: #31319c;
-  --color-royal-blue-900: #2c2e7c;
-  --color-royal-blue-950: #201f4c;
-
   /* Text tokens (zinc) */
   --text-strong: var(--color-zinc-700);
   --text: var(--color-zinc-600);
@@ -26,20 +13,20 @@
   --card-foreground: var(--foreground);
   --popover: var(--color-slate-50);
   --popover-foreground: var(--foreground);
-  --primary: var(--color-royal-blue-500);
-  --primary-foreground: var(--text-inverse);
+  --primary: var(--color-emerald-600);
+  --primary-foreground: var(--color-emerald-50);
   --text-foreground: var(--text-inverse);
-  --secondary: var(--color-slate-100);
-  --secondary-foreground: var(--foreground);
+  --secondary: var(--color-emerald-100);
+  --secondary-foreground: var(--color-emerald-900);
   --muted: var(--color-slate-100);
   --muted-foreground: var(--text-muted);
-  --accent: var(--color-slate-100);
-  --accent-foreground: var(--foreground);
+  --accent: var(--color-emerald-200);
+  --accent-foreground: var(--color-emerald-900);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
   --border: var(--color-slate-200);
   --input: var(--color-slate-200);
-  --ring: var(--color-royal-blue-600);
+  --ring: var(--color-emerald-500);
   --chart-1: oklch(0.558 0.183 272);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -50,12 +37,12 @@
   --hero-foreground: var(--text-inverse);
   --sidebar: var(--color-slate-50);
   --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--color-slate-900);
-  --sidebar-primary-foreground: var(--text-inverse);
-  --sidebar-accent: var(--color-slate-100);
-  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-primary: var(--color-emerald-600);
+  --sidebar-primary-foreground: var(--color-emerald-50);
+  --sidebar-accent: var(--color-emerald-100);
+  --sidebar-accent-foreground: var(--color-emerald-900);
   --sidebar-border: var(--color-slate-200);
-  --sidebar-ring: var(--color-slate-400);
+  --sidebar-ring: var(--color-emerald-500);
 
   --note-border: var(--color-indigo-200);
   --note-background: var(--color-indigo-50);
@@ -93,20 +80,20 @@
   --card-foreground: var(--foreground);
   --popover: var(--color-slate-900);
   --popover-foreground: var(--foreground);
-  --primary: var(--color-royal-blue-500);
-  --primary-foreground: var(--text-inverse);
+  --primary: var(--color-emerald-500);
+  --primary-foreground: var(--color-emerald-950);
   --text-foreground: var(--text-inverse);
-  --secondary: var(--color-slate-800);
-  --secondary-foreground: var(--foreground);
+  --secondary: var(--color-emerald-900);
+  --secondary-foreground: var(--color-emerald-100);
   --muted: var(--color-slate-800);
   --muted-foreground: var(--text-muted);
-  --accent: var(--color-slate-800);
-  --accent-foreground: var(--foreground);
+  --accent: var(--color-emerald-900);
+  --accent-foreground: var(--color-emerald-100);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: var(--color-slate-800);
   --input: var(--color-slate-800);
-  --ring: var(--color-slate-600);
+  --ring: var(--color-emerald-500);
   --chart-1: oklch(0.707 0.165 272);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -116,12 +103,12 @@
   --hero-foreground: var(--foreground);
   --sidebar: var(--color-slate-900);
   --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--color-slate-700);
-  --sidebar-primary-foreground: var(--foreground);
-  --sidebar-accent: var(--color-slate-800);
-  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-primary: var(--color-emerald-500);
+  --sidebar-primary-foreground: var(--color-emerald-950);
+  --sidebar-accent: var(--color-emerald-900);
+  --sidebar-accent-foreground: var(--color-emerald-100);
   --sidebar-border: var(--color-slate-800);
-  --sidebar-ring: var(--color-slate-600);
+  --sidebar-ring: var(--color-emerald-500);
 
   --note-border: var(--color-indigo-800);
   --note-background: var(--color-indigo-950);

@@ -12,7 +12,7 @@ export function FeaturedArticles() {
 
   return (
     <div>
-      <Typography.H5 className="font-bold text-lg mb-4 text-[#191f28]">
+      <Typography.H5 className="font-bold text-lg mb-4 text-text-strong">
         추천글
       </Typography.H5>
       <div className="space-y-4">
@@ -27,14 +27,14 @@ export function FeaturedArticles() {
                 className="block group hover:opacity-80 transition-opacity"
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-xs font-semibold text-[#3182f6]">
+                  <span className="text-xs font-semibold text-primary">
                     {featured}
                   </span>
                   <div>
-                    <Typography.H6 className="font-medium text-sm leading-snug mb-1 text-balance text-[#4e5968] group-hover:text-[#3182f6] transition-colors mt-0">
+                    <Typography.H6 className="font-medium text-sm leading-snug mb-1 text-balance text-text group-hover:text-primary transition-colors mt-0">
                       {title}
                     </Typography.H6>
-                    <p className="text-[#6b7684] text-xs">
+                    <p className="text-text-muted text-xs">
                       {author || "unknown"}
                     </p>
                   </div>
