@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Image } from "@/components/ui/image";
+import { Image } from "@jeongrae/ui";
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ import Mesh185_1 from "@/public/mesh-185-1.png";
 import Mesh185_2 from "@/public/mesh-185-2.png";
 import Mesh757_1 from "@/public/mesh-757-1.png";
 import Mesh757_2 from "@/public/mesh-757-2.png";
-import { Typography } from "../ui/typography";
+import { Typography } from "@jeongrae/ui";
 
 type ArticleItemProps = {
   article: ArticleMeta;

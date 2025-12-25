@@ -1,7 +1,7 @@
 "use client";
 
 import Link, { type LinkProps } from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "./button";
 import { ExternalLink } from "lucide-react";
 import { ComponentProps, ReactNode } from "react";
 

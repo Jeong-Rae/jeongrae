@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@jeongrae/ui";
 import type { SeriesGroup } from "@/lib/mdx/articles";
 import { useCircleIndexNavigator } from "@/hook/useIndexNavigator";
 import { useScheduleEffect } from "@/hook/useScheduleEffect";

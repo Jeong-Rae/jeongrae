@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from "react";
 import type { MDXComponents } from "mdx/types";
 
-import { Image } from "@/components/ui/image";
+import { Image } from "@jeongrae/ui";
 import {
   TypographyBlockquote,
   TypographyH1,
@@ -26,8 +26,8 @@ import {
   TypographyTh,
   TypographyThead,
   TypographyTr,
-} from "@/components/ui/typography";
-import { Callout } from "@/components/ui/callout";
+} from "@jeongrae/ui";
+import { Callout } from "@jeongrae/ui";
 
 function MdxCode({ className, ...props }: ComponentPropsWithoutRef<"code">) {
   const dataLanguage = (props as { "data-language"?: string })["data-language"];

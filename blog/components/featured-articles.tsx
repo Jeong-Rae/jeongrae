@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { getFeaturedArticles } from "@/lib/mdx/articles";
 import { Repeat } from "@/lib/react/repeat";
-import { Typography } from "./ui/typography";
+import { Typography } from "@jeongrae/ui";
 
 export function FeaturedArticles() {
   const featuredArticles = getFeaturedArticles();

@@ -6,7 +6,7 @@ import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { ArticleItem } from "@/components/article/article-item";
-import { Input } from "@/components/ui/input";
+import { Input } from "@jeongrae/ui";
 import { useArticleSearch } from "@/hook/useArticleSearch";
 import { useInputState } from "@/hook/useInputState";
 import { useRangeIndexNavigator } from "@/hook/useIndexNavigator";

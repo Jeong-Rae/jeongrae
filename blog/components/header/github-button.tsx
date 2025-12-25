@@ -1,5 +1,5 @@
-import { ButtonLink } from "../ui/button-link";
-import { Image } from "../ui/image";
+import { ButtonLink } from "@jeongrae/ui";
+import { Image } from "@jeongrae/ui";
 
 export function GithubButton() {
   return (

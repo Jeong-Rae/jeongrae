@@ -1,7 +1,7 @@
 import type { ArticleMeta } from "@/lib/mdx/types";
 import { Repeat } from "@/lib/react/repeat";
 import Link from "next/link";
-import { Image } from "@/components/ui/image";
+import { Image } from "@jeongrae/ui";
 
 export function RelatedSeries({ articles }: { articles: ArticleMeta[] }) {
   return (

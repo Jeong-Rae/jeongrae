@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import type { ReactNode } from "react";
 
-export function TypographyP({
+export function TypographyH6({
   children,
   className,
 }: {
@@ -9,13 +9,13 @@ export function TypographyP({
   className?: string;
 }) {
   return (
-    <p
+    <h6
       className={cn(
-        "leading-7 [&:not(:first-child)]:mt-6 text-muted-foreground",
+        "scroll-m-20 text-base font-semibold tracking-tight text-foreground mt-4 mb-2",
         className,
       )}
     >
       {children}
-    </p>
+    </h6>
   );
 }

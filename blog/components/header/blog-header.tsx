@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { GithubButton } from "./github-button";
 import { Logo } from "./logo";
-import { Button } from "../ui/button";
+import { Button } from "@jeongrae/ui";
 import { overlay } from "overlay-kit";
 import { SearchOverlay } from "../search-overlay";
 import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";

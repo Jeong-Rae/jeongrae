@@ -4,7 +4,7 @@ import { useCircleIndexNavigator } from "@/hook/useIndexNavigator";
 import { useScheduleEffect } from "@/hook/useScheduleEffect";
 import { useBooleanState } from "@/hook/useBooleanState";
 import { Repeat } from "@/lib/react/repeat";
-import { Image } from "./ui/image";
+import { Image } from "@jeongrae/ui";
 
 import Mesh474 from "@/public/mesh-474.png";
 import Mesh910 from "@/public/mesh-910.png";

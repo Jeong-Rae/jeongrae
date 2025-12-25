@@ -1,4 +1,4 @@
-import { Image } from "../ui/image";
+import { Image } from "@jeongrae/ui";
 
 export function Logo() {
   return (

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "./alert";
+import { cn } from "../lib/utils";
 
 import {
   AlertTriangleIcon,

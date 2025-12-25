@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { ExternalLink } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@jeongrae/ui"
+import { Button } from "@jeongrae/ui"
+import { Badge } from "@jeongrae/ui"
 import { cn } from "@/lib/utils"
 
 export type ToolStatus = "public" | "internal" | "blocked"

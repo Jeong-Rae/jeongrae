@@ -7,7 +7,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from "@jeongrae/ui";
 import { Repeat } from "@/lib/react/repeat";
 
 type PaginationProps = {
