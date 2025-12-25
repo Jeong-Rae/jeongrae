@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ExternalLink } from "lucide-react"
-import { Card, CardContent } from "@jeongrae/ui"
-import { Button } from "@jeongrae/ui"
-import { Badge } from "@jeongrae/ui"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import { ExternalLink } from "lucide-react";
+import { Card, CardContent } from "@jeongrae/ui";
+import { Button } from "@jeongrae/ui";
+import { Badge } from "@jeongrae/ui";
+import { cn } from "@/lib/utils";
 
-export type ToolStatus = "public" | "internal" | "blocked"
+export type ToolStatus = "public" | "internal" | "blocked";
 
 export interface Tool {
-  id: string
-  name: string
-  description: string
-  iconUrl?: string
-  url: string
-  status: ToolStatus
-  note?: string
+  id: string;
+  name: string;
+  description: string;
+  iconUrl?: string;
+  url: string;
+  status: ToolStatus;
+  note?: string;
 }
 
 interface ToolCardProps {
-  tool: Tool
+  tool: Tool;
 }
 
 const statusConfig: Record<ToolStatus, { label: string; className: string }> = {
@@ -36,21 +36,26 @@ const statusConfig: Record<ToolStatus, { label: string; className: string }> = {
     label: "Blocked",
     className: "bg-red-100 text-red-800 hover:bg-red-100",
   },
-}
+};
 
 export function ToolCard({ tool }: ToolCardProps) {
-  const [iconError, setIconError] = useState(false)
-  const isBlocked = tool.status === "blocked"
-  const config = statusConfig[tool.status]
+  const [iconError, setIconError] = useState(false);
+  const isBlocked = tool.status === "blocked";
+  const config = statusConfig[tool.status];
 
   const handleOpen = () => {
     if (!isBlocked) {
-      window.open(tool.url, "_blank", "noopener,noreferrer")
+      window.open(tool.url, "_blank", "noopener,noreferrer");
     }
-  }
+  };
 
   return (
-    <Card className={cn("relative transition-all duration-200 hover:shadow-md", isBlocked && "opacity-60")}>
+    <Card
+      className={cn(
+        "relative transition-all duration-200 hover:shadow-md",
+        isBlocked && "opacity-60",
+      )}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3 mb-4">
           {/* Icon */}
@@ -63,35 +68,51 @@ export function ToolCard({ tool }: ToolCardProps) {
                 onError={() => setIconError(true)}
               />
             ) : (
-              <span className="text-lg font-semibold text-emerald-600">{tool.name.charAt(0).toUpperCase()}</span>
+              <span className="text-lg font-semibold text-emerald-600">
+                {tool.name.charAt(0).toUpperCase()}
+              </span>
             )}
           </div>
 
           {/* Status Badge */}
-          <Badge variant="secondary" className={cn("text-xs font-medium", config.className)}>
+          <Badge
+            variant="secondary"
+            className={cn("text-xs font-medium", config.className)}
+          >
             {config.label}
           </Badge>
         </div>
 
         {/* Tool Name */}
-        <h3 className="font-semibold text-foreground mb-1 text-base">{tool.name}</h3>
+        <h3 className="font-semibold text-foreground mb-1 text-base">
+          {tool.name}
+        </h3>
 
         {/* Description */}
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-1">{tool.description}</p>
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-1">
+          {tool.description}
+        </p>
 
         {/* Action Button */}
         <Button
           onClick={handleOpen}
           disabled={isBlocked}
-          className={cn("w-full", !isBlocked && "bg-emerald-600 hover:bg-emerald-700 text-white")}
+          className={cn(
+            "w-full",
+            !isBlocked && "bg-emerald-600 hover:bg-emerald-700 text-white",
+          )}
         >
           {isBlocked ? "Disabled" : "Open"}
           {!isBlocked && <ExternalLink className="w-4 h-4 ml-2" />}
         </Button>
 
         {/* Note (Blocked only) */}
-        {isBlocked && tool.note && <p className="mt-3 text-xs text-muted-foreground text-center">{tool.note}</p>}
+        {isBlocked && tool.note && (
+          <p className="mt-3 text-xs text-muted-foreground text-center">
+            {tool.note}
+          </p>
+        )}
       </CardContent>
     </Card>
-  )
+  );
 }

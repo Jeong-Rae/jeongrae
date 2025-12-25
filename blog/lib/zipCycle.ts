@@ -27,21 +27,21 @@ import { modulo } from "@lyght/ts";
  * - 입력 배열은 변경되지 않는다.
  */
 export function zipCycle<T, U>(
-    base: readonly T[],
-    cycle: readonly U[],
+  base: readonly T[],
+  cycle: readonly U[],
 ): [T, U][] {
-    const len = base.length;
-    const cycleLen = cycle.length;
+  const len = base.length;
+  const cycleLen = cycle.length;
 
-    if (cycleLen === 0) {
-        return [];
-    }
+  if (cycleLen === 0) {
+    return [];
+  }
 
-    const result = new Array<[T, U]>(len);
+  const result = new Array<[T, U]>(len);
 
-    for (let i = 0; i < len; i++) {
-        result[i] = [base[i], cycle[modulo(i, cycleLen) ?? 0]];
-    }
+  for (let i = 0; i < len; i++) {
+    result[i] = [base[i], cycle[modulo(i, cycleLen) ?? 0]];
+  }
 
-    return result;
+  return result;
 }

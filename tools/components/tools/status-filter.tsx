@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-import type { ToolStatus } from "./tool-card"
+import { cn } from "@/lib/utils";
+import type { ToolStatus } from "./tool-card";
 
-type FilterStatus = ToolStatus | "all"
+type FilterStatus = ToolStatus | "all";
 
 interface StatusFilterProps {
-  currentFilter: FilterStatus
-  onFilterChange: (status: FilterStatus) => void
-  counts: Record<FilterStatus, number>
+  currentFilter: FilterStatus;
+  onFilterChange: (status: FilterStatus) => void;
+  counts: Record<FilterStatus, number>;
 }
 
 const filters: { value: FilterStatus; label: string }[] = [
@@ -16,9 +16,13 @@ const filters: { value: FilterStatus; label: string }[] = [
   { value: "public", label: "Public" },
   { value: "internal", label: "Internal" },
   { value: "blocked", label: "Blocked" },
-]
+];
 
-export function StatusFilter({ currentFilter, onFilterChange, counts }: StatusFilterProps) {
+export function StatusFilter({
+  currentFilter,
+  onFilterChange,
+  counts,
+}: StatusFilterProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {filters.map((filter) => (
@@ -33,9 +37,11 @@ export function StatusFilter({ currentFilter, onFilterChange, counts }: StatusFi
           )}
         >
           {filter.label}
-          <span className="ml-1.5 text-xs opacity-70">({counts[filter.value]})</span>
+          <span className="ml-1.5 text-xs opacity-70">
+            ({counts[filter.value]})
+          </span>
         </button>
       ))}
     </div>
-  )
+  );
 }

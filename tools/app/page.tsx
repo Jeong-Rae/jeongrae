@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { ToolsHeader } from "@/components/tools/tools-header"
-import { StatusFilter } from "@/components/tools/status-filter"
-import { ToolsGrid } from "@/components/tools/tools-grid"
-import type { Tool, ToolStatus } from "@/components/tools/tool-card"
+import { useState, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ToolsHeader } from "@/components/tools/tools-header";
+import { StatusFilter } from "@/components/tools/status-filter";
+import { ToolsGrid } from "@/components/tools/tools-grid";
+import type { Tool, ToolStatus } from "@/components/tools/tool-card";
 
 // Sample data - replace with actual data source
 const sampleTools: Tool[] = [
@@ -59,30 +59,32 @@ const sampleTools: Tool[] = [
     status: "blocked",
     note: "마이그레이션 진행중",
   },
-]
+];
 
-type FilterStatus = ToolStatus | "all"
+type FilterStatus = ToolStatus | "all";
 
 export default function ToolsPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const initialFilter = (searchParams.get("status") as FilterStatus) || "all"
-  const [filter, setFilter] = useState<FilterStatus>(initialFilter)
+  const initialFilter = (searchParams.get("status") as FilterStatus) || "all";
+  const [filter, setFilter] = useState<FilterStatus>(initialFilter);
 
   const handleFilterChange = (status: FilterStatus) => {
-    setFilter(status)
-    const params = new URLSearchParams()
+    setFilter(status);
+    const params = new URLSearchParams();
     if (status !== "all") {
-      params.set("status", status)
+      params.set("status", status);
     }
-    router.push(params.toString() ? `?${params.toString()}` : "/", { scroll: false })
-  }
+    router.push(params.toString() ? `?${params.toString()}` : "/", {
+      scroll: false,
+    });
+  };
 
   const filteredTools = useMemo(() => {
-    if (filter === "all") return sampleTools
-    return sampleTools.filter((tool) => tool.status === filter)
-  }, [filter])
+    if (filter === "all") return sampleTools;
+    return sampleTools.filter((tool) => tool.status === filter);
+  }, [filter]);
 
   const counts = useMemo(
     () => ({
@@ -92,7 +94,7 @@ export default function ToolsPage() {
       blocked: sampleTools.filter((t) => t.status === "blocked").length,
     }),
     [],
-  )
+  );
 
   return (
     <main className="min-h-screen bg-background">
@@ -100,11 +102,15 @@ export default function ToolsPage() {
         <ToolsHeader />
 
         <div className="mb-6">
-          <StatusFilter currentFilter={filter} onFilterChange={handleFilterChange} counts={counts} />
+          <StatusFilter
+            currentFilter={filter}
+            onFilterChange={handleFilterChange}
+            counts={counts}
+          />
         </div>
 
         <ToolsGrid tools={filteredTools} />
       </div>
     </main>
-  )
+  );
 }

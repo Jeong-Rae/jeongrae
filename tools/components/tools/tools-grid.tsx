@@ -1,12 +1,16 @@
-import { ToolCard, type Tool } from "./tool-card"
+import { ToolCard, type Tool } from "./tool-card";
 
 interface ToolsGridProps {
-  tools: Tool[]
+  tools: Tool[];
 }
 
 export function ToolsGrid({ tools }: ToolsGridProps) {
   if (tools.length === 0) {
-    return <div className="text-center py-12 text-muted-foreground">No tools available for this status.</div>
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        No tools available for this status.
+      </div>
+    );
   }
 
   return (
@@ -15,5 +19,5 @@ export function ToolsGrid({ tools }: ToolsGridProps) {
         <ToolCard key={tool.id} tool={tool} />
       ))}
     </div>
-  )
+  );
 }
