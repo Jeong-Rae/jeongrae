@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/validate.ts",
     "build": "next build",
     "start": "next start",
     "lint": "biome lint",
@@ -11,12 +12,12 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@jeongrae/ui": "workspace:*",
     "@vercel/analytics": "1.3.1",
     "autoprefixer": "^10.4.20",
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
-    "@jeongrae/ui": "workspace:*",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "16.0.10",
@@ -29,6 +30,7 @@
     "recharts": "2.15.4",
     "sonner": "^1.7.4",
     "vaul": "^1.1.2",
+    "yaml": "^2.6.1",
     "zod": "3.25.76"
   },
   "devDependencies": {
@@ -39,6 +41,7 @@
     "@types/react-dom": "^19",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
+    "tsx": "^4.21.0",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
   }
