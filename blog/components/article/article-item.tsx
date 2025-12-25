@@ -38,8 +38,7 @@ const sharedStyles = {
   headingWrapper: "space-y-2",
   title:
     "font-bold text-[20px] leading-[1.6] text-[var(--color-slate-700)] transition-colors line-clamp-2 group-hover:text-primary",
-  summary:
-    "text-sm leading-[1.6] text-[var(--color-slate-500)] line-clamp-2 mt-0",
+  summary: "text-sm leading-[1.6] text-[var(--color-slate-500)] line-clamp-2",
   meta: "text-xs leading-[1.6] text-[var(--color-slate-500)] mt-3",
   imageWrapper: "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
   imageClassName:
@@ -64,6 +63,78 @@ const variantStyles = {
     imageSize: { width: number; height: number };
   }
 >;
+
+function Heading({
+  title,
+  className,
+  isActive,
+}: {
+  title: string;
+  className?: string;
+  isActive: boolean;
+}) {
+  return (
+    <Typography.H5
+      className={cn(className, {
+        "text-primary": isActive,
+      })}
+    >
+      {title}
+    </Typography.H5>
+  );
+}
+
+function Summary({ text, className }: { text: string; className?: string }) {
+  return <Typography.P className={cn("!mt-0", className)}>{text}</Typography.P>;
+}
+
+function Meta({
+  uploadAt,
+  author,
+  className,
+}: {
+  uploadAt: string;
+  author?: string;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      {uploadAt} {author && `· ${author}`}
+    </div>
+  );
+}
+
+function Thumbnail({
+  src,
+  alt,
+  width,
+  height,
+  wrapperClassName,
+  imageClassName,
+  isActive,
+}: {
+  src: string | import("next/image").StaticImageData;
+  alt: string;
+  width: number;
+  height: number;
+  wrapperClassName?: string;
+  imageClassName?: string;
+  isActive: boolean;
+}) {
+  return (
+    <div className={wrapperClassName}>
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={cn(imageClassName, {
+          "scale-[1.2]": isActive,
+        })}
+      />
+    </div>
+  );
+}
 
 export function ArticleItem({
   article,
@@ -90,32 +161,23 @@ export function ArticleItem({
     >
       <div className={styles.content}>
         <div className={styles.headingWrapper}>
-          <Typography.H5
-            className={cn(styles.title, {
-              "text-primary": isActive,
-            })}
-          >
-            {title}
-          </Typography.H5>
-          {summary && (
-            <Typography.P className={styles.summary}>{summary}</Typography.P>
-          )}
+          <Heading title={title} className={styles.title} isActive={isActive} />
+
+          {summary && <Summary className={styles.summary} text={summary} />}
         </div>
-        <div className={styles.meta}>
-          {uploadAt} {author && `· ${author}`}
-        </div>
+
+        <Meta uploadAt={uploadAt} author={author} className={styles.meta} />
       </div>
-      <div className={styles.imageWrapper}>
-        <Image
-          src={resolvedThumbnail}
-          alt={title}
-          width={styles.imageSize.width}
-          height={styles.imageSize.height}
-          className={cn(styles.imageClassName, {
-            "scale-[1.2]": isActive,
-          })}
-        />
-      </div>
+
+      <Thumbnail
+        src={resolvedThumbnail}
+        alt={title}
+        width={styles.imageSize.width}
+        height={styles.imageSize.height}
+        wrapperClassName={styles.imageWrapper}
+        imageClassName={styles.imageClassName}
+        isActive={isActive}
+      />
     </Link>
   );
 }
