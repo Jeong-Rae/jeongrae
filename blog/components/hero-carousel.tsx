@@ -46,7 +46,7 @@ export function HeroCarousel() {
   useScheduleEffect({
     every: "5s",
     do: goNext,
-    until: () => isHover,
+    // until: () => isHover,
   });
 
   return (

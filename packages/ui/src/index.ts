@@ -8,5 +8,6 @@ export * from "./components/icon-button";
 export * from "./components/image";
 export * from "./components/input";
 export * from "./components/pagination";
+export * from "./components/tabs";
 export * from "./components/typography";
 export * from "./lib/utils";

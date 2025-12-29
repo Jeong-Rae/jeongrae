@@ -33,17 +33,15 @@ export default async function Home({ searchParams }: HomeProps) {
         <HeroCarousel />
       </div>
 
-      {/* Article Tabs */}
-      <div className="mb-8">
-        <ArticleTabs />
-      </div>
-
       {/* Main Content Grid: Articles + Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
         {/* Left: Article List + Pagination */}
-        <div>
-          <ArticleList articles={currentArticles} />
-          <Pagination currentPage={currentPage} totalPages={totalPages} />
+        <div className="space-y-8">
+          <ArticleTabs />
+          <div>
+            <ArticleList articles={currentArticles} />
+            <Pagination currentPage={currentPage} totalPages={totalPages} />
+          </div>
         </div>
 
         {/* Right: Sidebar with Featured & Series */}
