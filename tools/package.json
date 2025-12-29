@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "tsx scripts/validate.ts",
+    "prebuild": "tsx script/validate.ts",
     "build": "next build",
     "start": "next start",
     "lint": "biome lint",
