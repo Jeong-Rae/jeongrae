@@ -3,6 +3,8 @@
 @import "@jeongrae/ui/styles/shadcn.css";
 @import "@jeongrae/ui/styles/foundation.css";
 
+@source "../../packages/ui/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 pre.shiki,

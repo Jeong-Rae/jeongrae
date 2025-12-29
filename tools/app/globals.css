@@ -4,4 +4,6 @@
 @import "@jeongrae/ui/styles/foundation.css";
 @import "./theme.css";
 
+@source "../../packages/ui/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
