@@ -1,22 +1,8 @@
-# React Hooks Reference
+# React 문서 인덱스
 
-## Shared Hooks (@jeongrae/hook)
+공용 훅/컴포넌트 문서를 상황에 맞게 참조하라.
 
-Import from `@jeongrae/hook`. These hooks are shared across apps.
-
-- `useBooleanState(initial?: boolean)`
-  - Tiny boolean state helper: `{ value, setTrue, setFalse, toggle }`.
-- `useInputState(initial?: string)`
-  - String input state with `onChange`, `setValue`, and `reset`.
-- `useEvent(handler)`
-  - Returns a stable callback that always calls the latest `handler`.
-- `useGlobalEvent({ type, handler, options, target, enabled })`
-  - Global event listener for `window`, `document`, elements, or refs.
-- `useKeyboardShortcuts(shortcuts, options)`
-  - Declarative key combo handling with modifiers and optional `target`.
-- `useIndexNavigator({ items | length, initialIndex?, mode? })`
-  - Index navigation (`range` or `circle`), includes `useRangeIndexNavigator` and
-    `useCircleIndexNavigator`.
-- `useScheduleEffect({ after?, every?, until?, do, immediate? })`
-  - Timed actions using `TimeInput` (`number`, `"100ms"`, `"2s"`, `"1m"`). If
-    both `after` and `every` are set, `every` takes precedence.
+- 공용 훅 문서: 기본 호출 상황, 파라미터, 반환 타입, 예제
+  - Path: `./react/HOOKS.md`
+- 공용 UI 문서: 컴포넌트별 기본 사용법과 타입 안내
+  - Path: `./react/UI.md`
