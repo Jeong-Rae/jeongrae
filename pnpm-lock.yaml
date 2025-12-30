@@ -20,6 +20,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.69.0(react@19.2.0))
+      '@jeongrae/hook':
+        specifier: workspace:*
+        version: link:../packages/hook
       '@jeongrae/ui':
         specifier: workspace:*
         version: link:../packages/ui
@@ -146,6 +149,22 @@ importers:
         version: 5.9.3
 
   packages/config: {}
+
+  packages/hook:
+    dependencies:
+      '@lyght/ts':
+        specifier: ^1.0.0
+        version: 1.0.3
+      es-toolkit:
+        specifier: ^1.42.0
+        version: 1.43.0
+      react:
+        specifier: ^19
+        version: 19.2.0
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.7
 
   packages/ui:
     dependencies:

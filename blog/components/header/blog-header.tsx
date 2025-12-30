@@ -8,7 +8,7 @@ import { Logo } from "./logo";
 import { Button } from "@jeongrae/ui";
 import { overlay } from "overlay-kit";
 import { SearchOverlay } from "../search-overlay";
-import { useKeyboardShortcuts } from "@/hook/useKeyboardShortcuts";
+import { useKeyboardShortcuts } from "@jeongrae/hook";
 
 export function BlogHeader() {
   const openSearch = useCallback(() => {

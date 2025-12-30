@@ -84,7 +84,7 @@ export function getQueryParam(
   defaultValue?: boolean,
 ): boolean | undefined;
 
-export function getQueryParam<T = Record<string, any>>(
+export function getQueryParam<T = Record<string, unknown>>(
   value: QueryInput,
   type: "object",
   defaultValue?: T,

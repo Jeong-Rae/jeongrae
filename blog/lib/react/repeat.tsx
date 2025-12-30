@@ -1,6 +1,12 @@
 import { isString } from "es-toolkit";
 import { hasIn, isNumber, isObject } from "es-toolkit/compat";
-import { cloneElement, Fragment, isValidElement, Key, ReactNode } from "react";
+import {
+  cloneElement,
+  Fragment,
+  isValidElement,
+  type Key,
+  type ReactNode,
+} from "react";
 
 function resolveKey<T>(
   item: T,
@@ -10,7 +16,7 @@ function resolveKey<T>(
   if (itemKey) return itemKey(item, index);
 
   if (isObject(item) && hasIn(item, "id")) {
-    const id = (item as any).id;
+    const id = (item as { id?: unknown }).id;
     if (isString(id) || isNumber(id)) {
       return id;
     }
@@ -55,11 +61,16 @@ export function RepeatTimes({
 }: RepeatTimesProps) {
   if (times <= 0) return null;
 
+  const items = Array.from({ length: times }, (_, index) => ({
+    key: `repeat-${index}`,
+    index,
+  }));
+
   return (
     <>
-      {Array.from({ length: times }, (_, index) => (
-        <Fragment key={index}>
-          {applyIndexProp(children(index), index, indexProp)}
+      {items.map((item) => (
+        <Fragment key={item.key}>
+          {applyIndexProp(children(item.index), item.index, indexProp)}
         </Fragment>
       ))}
     </>

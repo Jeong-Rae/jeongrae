@@ -1,9 +1,13 @@
 "use client";
 
-import { useCircleIndexNavigator } from "@/hook/useIndexNavigator";
-import { useScheduleEffect } from "@/hook/useScheduleEffect";
-import { useBooleanState } from "@/hook/useBooleanState";
 import { Repeat } from "@/lib/react/repeat";
+import { useRef } from "react";
+import {
+  useBooleanState,
+  useCircleIndexNavigator,
+  useGlobalEvent,
+  useScheduleEffect,
+} from "@jeongrae/hook";
 import { Image } from "@jeongrae/ui";
 
 import Mesh474 from "@/public/mesh-474.png";
@@ -28,6 +32,7 @@ const carouselItems = [
 ];
 
 export function HeroCarousel() {
+  const carouselRef = useRef<HTMLDivElement>(null);
   const {
     index: currentIndex,
     goNext,
@@ -43,17 +48,28 @@ export function HeroCarousel() {
     setFalse: handleMouseLeave,
   } = useBooleanState(false);
 
+  useGlobalEvent({
+    type: "mouseenter",
+    target: carouselRef,
+    handler: handleMouseEnter,
+  });
+
+  useGlobalEvent({
+    type: "mouseleave",
+    target: carouselRef,
+    handler: handleMouseLeave,
+  });
+
   useScheduleEffect({
     every: "5s",
     do: goNext,
-    // until: () => isHover,
+    until: () => isHover,
   });
 
   return (
     <div
+      ref={carouselRef}
       className="relative w-full overflow-hidden rounded-2xl bg-[var(--color-hero)] h-[300px]"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       <div className="relative h-full">
         <Repeat.Each each={carouselItems}>
@@ -91,6 +107,7 @@ function CarouselIndicator({
 }) {
   return (
     <button
+      type="button"
       className={`h-2 w-2 rounded-full transition-all ${
         isActive ? "w-8 bg-hero-foreground" : "bg-hero-foreground/50"
       }`}

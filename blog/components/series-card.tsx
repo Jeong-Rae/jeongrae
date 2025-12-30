@@ -1,10 +1,8 @@
 "use client";
 
-import { Badge } from "@jeongrae/ui";
 import type { SeriesGroup } from "@/lib/mdx/articles";
-import { useCircleIndexNavigator } from "@/hook/useIndexNavigator";
-import { useScheduleEffect } from "@/hook/useScheduleEffect";
-import { isEmpty, isNil } from "es-toolkit/compat";
+import { useCircleIndexNavigator, useScheduleEffect } from "@jeongrae/hook";
+import { Badge, Image } from "@jeongrae/ui";
 import Link from "next/link";
 
 export function SeriesCard({ series }: { series: SeriesGroup }) {
@@ -15,8 +13,6 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
 
   const episodeCountLabel = `${articles.length}편 연재 중`;
 
-  if (isEmpty(episodes)) return null;
-
   const {
     item: currentEpisode,
     length: episodeLength,
@@ -25,26 +21,29 @@ export function SeriesCard({ series }: { series: SeriesGroup }) {
     items: episodes,
   });
 
+  const hasEpisodes = episodes.length > 0;
+
   useScheduleEffect({
     every: "3s",
     do: goNext,
-    until: () => episodeLength <= 1,
+    until: () => !hasEpisodes || episodeLength <= 1,
   });
 
-  const episodeTitle = isNil(currentEpisode)
-    ? episodes[0].title
-    : currentEpisode.title;
-  const titleSlug =
-    (currentEpisode && currentEpisode.slug) ?? latestArticle?.slug ?? "";
+  if (!hasEpisodes) return null;
+
+  const episodeTitle = currentEpisode?.title ?? episodes[0].title;
+  const titleSlug = currentEpisode?.slug ?? latestArticle?.slug ?? "";
 
   return (
     <div className="border border-border rounded-lg hover:border-foreground/20 transition-colors">
       <div className="p-4">
         <div className="flex flex-row-reverse gap-4">
           <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-            <img
+            <Image
               src={thumbnail}
               alt={seriesTitle}
+              width={80}
+              height={80}
               className="h-full w-full object-cover"
             />
           </div>

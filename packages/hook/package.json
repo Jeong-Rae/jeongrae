@@ -1,0 +1,19 @@
+{
+  "name": "@jeongrae/hook",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "react": "^19"
+  },
+  "dependencies": {
+    "@lyght/ts": "^1.0.0",
+    "es-toolkit": "^1.42.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19"
+  }
+}

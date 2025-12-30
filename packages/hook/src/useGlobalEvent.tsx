@@ -7,7 +7,7 @@ export type GlobalEventTarget =
   | Window
   | Document
   | HTMLElement
-  | RefObject<HTMLElement | Document | Window>
+  | RefObject<HTMLElement | Document | Window | null>
   | null
   | undefined;
 
