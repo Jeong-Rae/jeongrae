@@ -1,17 +1,23 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useInputState } from "@jeongrae/hook";
 import { Input, Textarea } from "@jeongrae/ui";
 import { Check, Loader2 } from "lucide-react";
 
 import type { BlogType, Note, Project, Section } from "@/lib/types";
 import { generateLayoutTemplate } from "@/lib/templates";
+import { useAsyncAction } from "@/hook/useAsyncAction";
+import { useClipboardCopy } from "@/hook/useClipboardCopy";
+import { useSectionMeta } from "@/hook/useSectionMeta";
+import { useTextDownload } from "@/hook/useTextDownload";
 import { AgentPanel } from "./agent-panel";
 import { DraftViewer } from "./draft-viewer";
 import { NotesEditor } from "./notes-editor";
 import { OutlineTree } from "./outline-tree";
 import { PhaseStepper } from "./phase-stepper";
 import { SectionDetail } from "./section-detail";
+import { delay } from "es-toolkit";
 
 interface WritingWorkspaceProps {
   project: Project;
@@ -25,9 +31,15 @@ export function WritingWorkspace({
   onBack,
 }: WritingWorkspaceProps) {
   const [activeSection, setActiveSection] = useState<string | undefined>();
-  const [currentNote, setCurrentNote] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
+  const {
+    value: currentNote,
+    setValue: setCurrentNote,
+    reset: resetCurrentNote,
+  } = useInputState("");
+  const { isLoading, run } = useAsyncAction();
+  const { copy } = useClipboardCopy();
+  const downloadText = useTextDownload();
 
   const currentSection = project.sections.find(
     (section) => section.id === activeSection,
@@ -56,21 +68,21 @@ export function WritingWorkspace({
 
   const handleGenerateLayout = async () => {
     if (!project.type) return;
-    setIsLoading(true);
-    await delay(1000);
+    await run(async () => {
+      await delay(1000);
 
-    const layoutSections = generateLayoutTemplate(project.type).map(
-      (section) => ({
-        ...section,
-        notes: [] as Note[],
-      }),
-    );
+      const layoutSections = generateLayoutTemplate(project.type).map(
+        (section) => ({
+          ...section,
+          notes: [] as Note[],
+        }),
+      );
 
-    updateProject({
-      sections: layoutSections,
-      phase: "layout",
+      updateProject({
+        sections: layoutSections,
+        phase: "layout",
+      });
     });
-    setIsLoading(false);
   };
 
   const handleStartInterview = () => {
@@ -90,32 +102,32 @@ export function WritingWorkspace({
 
   const handleSubmitNote = async () => {
     if (!currentNote.trim() || !activeSection) return;
-    setIsLoading(true);
-    await delay(800);
+    await run(async () => {
+      await delay(800);
 
-    const newNote: Note = {
-      id: Date.now().toString(),
-      content: currentNote,
-      timestamp: new Date(),
-    };
-
-    const updatedSections = project.sections.map((section) => {
-      if (section.id !== activeSection) return section;
-
-      const notes = [...section.notes, newNote];
-      const isSufficient = notes.length >= 2;
-      return {
-        ...section,
-        notes,
-        status: isSufficient
-          ? ("sufficient" as const)
-          : ("insufficient" as const),
+      const newNote: Note = {
+        id: Date.now().toString(),
+        content: currentNote,
+        timestamp: new Date(),
       };
-    });
 
-    updateProject({ sections: updatedSections });
-    setCurrentNote("");
-    setIsLoading(false);
+      const updatedSections = project.sections.map((section) => {
+        if (section.id !== activeSection) return section;
+
+        const notes = [...section.notes, newNote];
+        const isSufficient = notes.length >= 2;
+        return {
+          ...section,
+          notes,
+          status: isSufficient
+            ? ("sufficient" as const)
+            : ("insufficient" as const),
+        };
+      });
+
+      updateProject({ sections: updatedSections });
+      resetCurrentNote();
+    });
   };
 
   const handleNextSection = () => {
@@ -138,38 +150,37 @@ export function WritingWorkspace({
   };
 
   const handleStartRefine = async () => {
-    setIsLoading(true);
-    await delay(1000);
-    setIsLoading(false);
+    await run(async () => {
+      await delay(1000);
+    });
   };
 
   const handleGenerateDraft = async () => {
-    setIsLoading(true);
-    await delay(1500);
+    await run(async () => {
+      await delay(1500);
 
-    const draft = buildDraft(project);
-    updateProject({ draft, phase: "draft" });
-    setIsLoading(false);
+      const draft = buildDraft(project);
+      updateProject({ draft, phase: "draft" });
+    });
   };
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(project.draft);
+    await copy(project.draft);
   };
 
   const handleExport = () => {
-    const blob = new Blob([project.draft], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${project.title || "draft"}.md`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadText({
+      filename: `${project.title || "draft"}.md`,
+      content: project.draft,
+      mime: "text/markdown",
+    });
   };
 
   const canProceedToNext = currentSection?.status === "sufficient";
-  const missingInfo = getMissingInfo(currentSection);
-  const agentQuestion = getAgentQuestion(currentSection, missingInfo);
-  const previousSummary = getPreviousSummary(previousSection);
+  const { missingInfo, agentQuestion, previousSummary } = useSectionMeta(
+    currentSection,
+    previousSection,
+  );
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -194,6 +205,7 @@ export function WritingWorkspace({
           currentSection={currentSection}
           currentNote={currentNote}
           onNoteChange={setCurrentNote}
+          onSubmitNote={handleSubmitNote}
           onSectionClick={(sectionId) => setActiveSection(sectionId)}
           onBriefChange={(brief) => updateProject({ brief })}
         />
@@ -317,6 +329,7 @@ function WorkspaceMain({
   currentSection,
   currentNote,
   onNoteChange,
+  onSubmitNote,
   onSectionClick,
   onBriefChange,
 }: {
@@ -326,6 +339,7 @@ function WorkspaceMain({
   currentSection?: Section;
   currentNote: string;
   onNoteChange: (note: string) => void;
+  onSubmitNote: () => void;
   onSectionClick: (sectionId: string) => void;
   onBriefChange: (brief: string) => void;
 }) {
@@ -340,6 +354,7 @@ function WorkspaceMain({
           section={currentSection}
           currentNote={currentNote}
           onNoteChange={onNoteChange}
+          onSubmitNote={onSubmitNote}
         />
       )}
       {phase === "refine" && (
@@ -404,10 +419,12 @@ function InterviewPhase({
   section,
   currentNote,
   onNoteChange,
+  onSubmitNote,
 }: {
   section?: Section;
   currentNote: string;
   onNoteChange: (note: string) => void;
+  onSubmitNote: () => void;
 }) {
   if (!section) return null;
 
@@ -417,6 +434,7 @@ function InterviewPhase({
         section={section}
         currentNote={currentNote}
         onNoteChange={onNoteChange}
+        onSubmit={onSubmitNote}
       />
     </div>
   );
@@ -488,10 +506,6 @@ function AgentSidebar(props: {
   );
 }
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function buildDraft(project: Project) {
   let draft = `# ${project.title}\n\n`;
   project.sections.forEach((section) => {
@@ -506,33 +520,4 @@ function buildDraft(project: Project) {
     }
   });
   return draft;
-}
-
-function getMissingInfo(section?: Section) {
-  if (!section || section.notes.length === 0) {
-    return section?.requiredInfo ?? [];
-  }
-  if (section.status === "insufficient") {
-    return section.requiredInfo.slice(section.notes.length);
-  }
-  return [];
-}
-
-function getAgentQuestion(section?: Section, missingInfo: string[] = []) {
-  if (!section) return undefined;
-  if (section.notes.length === 0) {
-    return `이 섹션에서 ${section.requiredInfo[0]}에 대해 알려주세요.`;
-  }
-  if (section.status === "insufficient" && missingInfo.length > 0) {
-    return `${missingInfo[0]}에 대한 정보가 더 필요합니다.`;
-  }
-  return undefined;
-}
-
-function getPreviousSummary(section?: Section) {
-  if (!section || section.notes.length === 0) return undefined;
-  return `${section.title}: ${section.notes
-    .map((note) => note.content)
-    .join(" ")
-    .slice(0, 100)}...`;
 }

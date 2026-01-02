@@ -1,6 +1,8 @@
 "use client";
 
+import { type RefObject, useRef } from "react";
 import { Textarea } from "@jeongrae/ui";
+import { useKeyboardShortcuts } from "@jeongrae/hook";
 import { Clock, FileText } from "lucide-react";
 
 import type { Note, Section } from "@/lib/types";
@@ -9,17 +11,44 @@ interface NotesEditorProps {
   section: Section;
   onNoteChange?: (content: string) => void;
   currentNote?: string;
+  onSubmit?: () => void | Promise<void>;
 }
 
 export function NotesEditor({
   section,
   onNoteChange,
   currentNote = "",
+  onSubmit,
 }: NotesEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useKeyboardShortcuts(
+    [
+      {
+        keys: "Enter",
+        ctrl: true,
+        preventDefault: true,
+        enabled: Boolean(onSubmit),
+        handler: () => {
+          if (!currentNote.trim()) return;
+          void onSubmit?.();
+        },
+      },
+    ],
+    {
+      target: textareaRef,
+      enabled: Boolean(onSubmit),
+    },
+  );
+
   return (
     <div className="space-y-6">
       <NotesHeader section={section} />
-      <NotesInput value={currentNote} onChange={onNoteChange} />
+      <NotesInput
+        value={currentNote}
+        onChange={onNoteChange}
+        textareaRef={textareaRef}
+      />
       <NotesList notes={section.notes} />
     </div>
   );
@@ -42,14 +71,17 @@ function NotesHeader({ section }: { section: Section }) {
 function NotesInput({
   value,
   onChange,
+  textareaRef,
 }: {
   value: string;
   onChange?: (content: string) => void;
+  textareaRef: RefObject<HTMLTextAreaElement>;
 }) {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-foreground">메모 입력</label>
       <Textarea
+        ref={textareaRef}
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
         placeholder="이 섹션에 대한 정보를 자유롭게 입력하세요. 문장이 완벽하지 않아도 됩니다..."
