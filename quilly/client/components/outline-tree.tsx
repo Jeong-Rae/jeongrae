@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-import type { Section, SectionStatus } from "@/lib/types"
-import { Check, AlertCircle, ChevronRight, Circle } from "lucide-react"
+import { cn } from "@/lib/utils";
+import type { Section, SectionStatus } from "@/lib/types";
+import { Check, AlertCircle, ChevronRight, Circle } from "lucide-react";
 
 interface OutlineTreeProps {
-  sections: Section[]
-  activeSection?: string
-  onSectionClick?: (sectionId: string) => void
-  disabled?: boolean
+  sections: Section[];
+  activeSection?: string;
+  onSectionClick?: (sectionId: string) => void;
+  disabled?: boolean;
 }
 
 function StatusBadge({ status }: { status: SectionStatus }) {
@@ -18,34 +18,39 @@ function StatusBadge({ status }: { status: SectionStatus }) {
         <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20">
           <Check className="w-2.5 h-2.5 text-emerald-400" />
         </span>
-      )
+      );
     case "insufficient":
       return (
         <span className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-500/20">
           <AlertCircle className="w-2.5 h-2.5 text-amber-400" />
         </span>
-      )
+      );
     case "active":
       return (
         <span className="flex items-center justify-center w-4 h-4">
           <ChevronRight className="w-3 h-3 text-emerald-400 animate-pulse" />
         </span>
-      )
+      );
     default:
       return (
         <span className="flex items-center justify-center w-4 h-4">
           <Circle className="w-2 h-2 text-muted-foreground" />
         </span>
-      )
+      );
   }
 }
 
-export function OutlineTree({ sections, activeSection, onSectionClick, disabled }: OutlineTreeProps) {
+export function OutlineTree({
+  sections,
+  activeSection,
+  onSectionClick,
+  disabled,
+}: OutlineTreeProps) {
   return (
     <div className="space-y-1">
       {sections.map((section) => {
-        const isActive = section.id === activeSection
-        const isH3 = section.level === "h3"
+        const isActive = section.id === activeSection;
+        const isH3 = section.level === "h3";
 
         return (
           <button
@@ -66,8 +71,8 @@ export function OutlineTree({ sections, activeSection, onSectionClick, disabled 
               {section.title}
             </span>
           </button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

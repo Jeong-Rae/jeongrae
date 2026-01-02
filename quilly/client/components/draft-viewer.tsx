@@ -1,13 +1,10 @@
-"use client"
-import type { Section } from "@/lib/types"
+"use client";
 
 interface DraftViewerProps {
-  draft: string
-  sections: Section[]
-  onSectionClick?: (sectionId: string) => void
+  draft: string;
 }
 
-export function DraftViewer({ draft, sections, onSectionClick }: DraftViewerProps) {
+export function DraftViewer({ draft }: DraftViewerProps) {
   return (
     <div className="prose prose-invert prose-emerald max-w-none">
       <div className="p-6 rounded-lg bg-secondary/20 border border-border">
@@ -16,5 +13,5 @@ export function DraftViewer({ draft, sections, onSectionClick }: DraftViewerProp
         </pre>
       </div>
     </div>
-  )
+  );
 }

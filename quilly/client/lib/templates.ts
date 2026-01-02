@@ -1,6 +1,8 @@
-import type { BlogType, Section } from "./types"
+import type { BlogType, Section } from "./types";
 
-export function generateLayoutTemplate(type: BlogType): Omit<Section, "notes">[] {
+export function generateLayoutTemplate(
+  type: BlogType,
+): Omit<Section, "notes">[] {
   const templates: Record<BlogType, Omit<Section, "notes">[]> = {
     troubleshooting: [
       {
@@ -186,7 +188,7 @@ export function generateLayoutTemplate(type: BlogType): Omit<Section, "notes">[]
         status: "pending",
       },
     ],
-  }
+  };
 
-  return templates[type]
+  return templates[type];
 }

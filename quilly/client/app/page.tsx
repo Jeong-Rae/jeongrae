@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import type { Project } from "@/lib/types"
-import { ProjectList } from "@/components/project-list"
-import { WritingWorkspace } from "@/components/writing-workspace"
+import { useState } from "react";
+import type { Project } from "@/lib/types";
+import { ProjectList } from "@/components/project-list";
+import { WritingWorkspace } from "@/components/writing-workspace";
 
 // Demo projects for initial state
 const DEMO_PROJECTS: Project[] = [
@@ -27,11 +27,11 @@ const DEMO_PROJECTS: Project[] = [
     draft: "# 결제 모듈 설계 기록\n\n## 배경 및 목표\n...",
     updatedAt: new Date("2025-12-29T09:30:00"),
   },
-]
+];
 
 export default function HomePage() {
-  const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS)
-  const [activeProject, setActiveProject] = useState<Project | null>(null)
+  const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
 
   const handleCreateProject = () => {
     const newProject: Project = {
@@ -43,23 +43,37 @@ export default function HomePage() {
       sections: [],
       draft: "",
       updatedAt: new Date(),
-    }
-    setProjects([newProject, ...projects])
-    setActiveProject(newProject)
-  }
+    };
+    setProjects([newProject, ...projects]);
+    setActiveProject(newProject);
+  };
 
   const handleProjectUpdate = (updatedProject: Project) => {
-    setProjects(projects.map((p) => (p.id === updatedProject.id ? updatedProject : p)))
-    setActiveProject(updatedProject)
-  }
+    setProjects(
+      projects.map((p) => (p.id === updatedProject.id ? updatedProject : p)),
+    );
+    setActiveProject(updatedProject);
+  };
 
   const handleBack = () => {
-    setActiveProject(null)
-  }
+    setActiveProject(null);
+  };
 
   if (activeProject) {
-    return <WritingWorkspace project={activeProject} onProjectUpdate={handleProjectUpdate} onBack={handleBack} />
+    return (
+      <WritingWorkspace
+        project={activeProject}
+        onProjectUpdate={handleProjectUpdate}
+        onBack={handleBack}
+      />
+    );
   }
 
-  return <ProjectList projects={projects} onSelectProject={setActiveProject} onCreateProject={handleCreateProject} />
+  return (
+    <ProjectList
+      projects={projects}
+      onSelectProject={setActiveProject}
+      onCreateProject={handleCreateProject}
+    />
+  );
 }
