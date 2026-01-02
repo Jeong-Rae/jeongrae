@@ -1,4 +1,6 @@
 packages:
   - "blog"
   - "tools"
+  - "quilly"
+  - "quilly/*"
   - "packages/*"

@@ -7,7 +7,8 @@
     "build": "turbo build",
     "start": "turbo start",
     "lint": "turbo lint",
-    "format": "turbo format"
+    "format": "turbo format",
+    "v0:init": "node scripts/v0-init.mjs"
   },
   "devDependencies": {
     "turbo": "^2.3.3"

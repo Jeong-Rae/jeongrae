@@ -7,6 +7,8 @@ export * from "./components/card";
 export * from "./components/icon-button";
 export * from "./components/image";
 export * from "./components/input";
+export * from "./components/select";
+export * from "./components/textarea";
 export * from "./components/pagination";
 export * from "./components/tabs";
 export * from "./components/typography";
