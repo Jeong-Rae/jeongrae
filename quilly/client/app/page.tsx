@@ -62,6 +62,7 @@ export default function HomePage() {
   if (activeProject) {
     return (
       <WritingWorkspace
+        key={activeProject.id}
         project={activeProject}
         onProjectUpdate={handleProjectUpdate}
         onBack={handleBack}

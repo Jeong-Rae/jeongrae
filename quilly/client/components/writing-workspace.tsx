@@ -5,11 +5,17 @@ import { useInputState } from "@jeongrae/hook";
 import { Input, Textarea } from "@jeongrae/ui";
 import { Check, Loader2 } from "lucide-react";
 
-import type { BlogType, Note, Project, Section } from "@/lib/types";
+import type { BlogType, Note, Phase, Project, Section } from "@/lib/types";
 import { generateLayoutTemplate } from "@/lib/templates";
-import { useAsyncAction } from "@/hook/useAsyncAction";
 import { useClipboardCopy } from "@/hook/useClipboardCopy";
+import {
+  type FlowGuards,
+  type FlowNextMap,
+  type FlowTransitions,
+  useFlowState,
+} from "@/hook/useFlowState";
 import { useSectionMeta } from "@/hook/useSectionMeta";
+import { useTask } from "@/hook/useTask";
 import { useTextDownload } from "@/hook/useTextDownload";
 import { AgentPanel } from "./agent-panel";
 import { DraftViewer } from "./draft-viewer";
@@ -25,6 +31,21 @@ interface WritingWorkspaceProps {
   onBack: () => void;
 }
 
+const FLOW_TRANSITIONS: FlowTransitions<Phase> = {
+  type: ["layout"],
+  layout: ["interview"],
+  interview: ["refine"],
+  refine: ["draft"],
+  draft: [],
+};
+
+const FLOW_NEXT: FlowNextMap<Phase> = {
+  type: "layout",
+  layout: "interview",
+  interview: "refine",
+  refine: "draft",
+};
+
 export function WritingWorkspace({
   project,
   onProjectUpdate,
@@ -37,9 +58,19 @@ export function WritingWorkspace({
     setValue: setCurrentNote,
     reset: resetCurrentNote,
   } = useInputState("");
-  const { isLoading, run } = useAsyncAction();
   const { copy } = useClipboardCopy();
   const downloadText = useTextDownload();
+  const flowGuards: FlowGuards<Phase> = {
+    layout: () => (project.type ? true : { reason: "type-required" }),
+    interview: () =>
+      project.sections.length > 0 ? true : { reason: "layout-required" },
+  };
+  const flow = useFlowState<Phase>({
+    initial: project.phase,
+    transitions: FLOW_TRANSITIONS,
+    guards: flowGuards,
+    next: FLOW_NEXT,
+  });
 
   const currentSection = project.sections.find(
     (section) => section.id === activeSection,
@@ -66,24 +97,23 @@ export function WritingWorkspace({
     updateProject({ type });
   };
 
-  const handleGenerateLayout = async () => {
+  const generateLayoutTask = useTask(async () => {
     if (!project.type) return;
-    await run(async () => {
-      await delay(1000);
+    await delay(1000);
 
-      const layoutSections = generateLayoutTemplate(project.type).map(
-        (section) => ({
-          ...section,
-          notes: [] as Note[],
-        }),
-      );
+    const layoutSections = generateLayoutTemplate(project.type).map(
+      (section) => ({
+        ...section,
+        notes: [] as Note[],
+      }),
+    );
 
-      updateProject({
-        sections: layoutSections,
-        phase: "layout",
-      });
+    if (!flow.transition("layout")) return;
+    updateProject({
+      sections: layoutSections,
+      phase: "layout",
     });
-  };
+  });
 
   const handleStartInterview = () => {
     const firstSection = project.sections[0];
@@ -95,40 +125,38 @@ export function WritingWorkspace({
     }));
     updateProject({
       sections: updatedSections,
-      phase: "interview",
+      phase: flow.transition("interview") ? "interview" : project.phase,
     });
     setActiveSection(firstSection.id);
   };
 
-  const handleSubmitNote = async () => {
+  const submitNoteTask = useTask(async () => {
     if (!currentNote.trim() || !activeSection) return;
-    await run(async () => {
-      await delay(800);
+    await delay(800);
 
-      const newNote: Note = {
-        id: Date.now().toString(),
-        content: currentNote,
-        timestamp: new Date(),
+    const newNote: Note = {
+      id: Date.now().toString(),
+      content: currentNote,
+      timestamp: new Date(),
+    };
+
+    const updatedSections = project.sections.map((section) => {
+      if (section.id !== activeSection) return section;
+
+      const notes = [...section.notes, newNote];
+      const isSufficient = notes.length >= 2;
+      return {
+        ...section,
+        notes,
+        status: isSufficient
+          ? ("sufficient" as const)
+          : ("insufficient" as const),
       };
-
-      const updatedSections = project.sections.map((section) => {
-        if (section.id !== activeSection) return section;
-
-        const notes = [...section.notes, newNote];
-        const isSufficient = notes.length >= 2;
-        return {
-          ...section,
-          notes,
-          status: isSufficient
-            ? ("sufficient" as const)
-            : ("insufficient" as const),
-        };
-      });
-
-      updateProject({ sections: updatedSections });
-      resetCurrentNote();
     });
-  };
+
+    updateProject({ sections: updatedSections });
+    resetCurrentNote();
+  });
 
   const handleNextSection = () => {
     const currentIndex = project.sections.findIndex(
@@ -137,7 +165,9 @@ export function WritingWorkspace({
     const nextSection = project.sections[currentIndex + 1];
 
     if (!nextSection) {
-      updateProject({ phase: "refine" });
+      if (flow.transition("refine")) {
+        updateProject({ phase: "refine" });
+      }
       return;
     }
 
@@ -150,19 +180,27 @@ export function WritingWorkspace({
   };
 
   const handleStartRefine = async () => {
-    await run(async () => {
-      await delay(1000);
-    });
+    await startRefineTask.run();
   };
 
-  const handleGenerateDraft = async () => {
-    await run(async () => {
-      await delay(1500);
+  const startRefineTask = useTask(async () => {
+    await delay(1000);
+  });
 
-      const draft = buildDraft(project);
+  const generateDraftTask = useTask(async () => {
+    await delay(1500);
+
+    const draft = buildDraft(project);
+    if (flow.phase !== "draft" && flow.transition("draft")) {
       updateProject({ draft, phase: "draft" });
-    });
-  };
+      return;
+    }
+    updateProject({ draft });
+  });
+
+  const handleGenerateLayout = () => generateLayoutTask.run();
+  const handleSubmitNote = () => submitNoteTask.run();
+  const handleGenerateDraft = () => generateDraftTask.run();
 
   const handleCopy = async () => {
     await copy(project.draft);
@@ -176,6 +214,11 @@ export function WritingWorkspace({
     });
   };
 
+  const isLoading =
+    generateLayoutTask.isRunning ||
+    submitNoteTask.isRunning ||
+    startRefineTask.isRunning ||
+    generateDraftTask.isRunning;
   const canProceedToNext = currentSection?.status === "sufficient";
   const { missingInfo, agentQuestion, previousSummary } = useSectionMeta(
     currentSection,
@@ -186,7 +229,7 @@ export function WritingWorkspace({
     <div className="flex flex-col h-screen bg-background">
       <WorkspaceHeader
         title={project.title}
-        phase={project.phase}
+        phase={flow.phase}
         saveStatus={saveStatus}
         onBack={onBack}
         onTitleChange={(title) => updateProject({ title })}
@@ -196,10 +239,10 @@ export function WritingWorkspace({
           sections={project.sections}
           activeSection={activeSection}
           onSectionClick={(sectionId) => setActiveSection(sectionId)}
-          disabled={project.phase === "type"}
+          disabled={flow.phase === "type"}
         />
         <WorkspaceMain
-          phase={project.phase}
+          phase={flow.phase}
           project={project}
           activeSection={activeSection}
           currentSection={currentSection}
@@ -210,7 +253,7 @@ export function WritingWorkspace({
           onBriefChange={(brief) => updateProject({ brief })}
         />
         <AgentSidebar
-          phase={project.phase}
+          phase={flow.phase}
           currentSection={currentSection}
           previousSectionSummary={previousSummary}
           blogType={project.type}
