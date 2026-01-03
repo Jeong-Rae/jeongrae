@@ -1,29 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useInputState } from "@jeongrae/hook";
 import { Input, Textarea } from "@jeongrae/ui";
 import { Check, Loader2 } from "lucide-react";
 
-import type { BlogType, Note, Phase, Project, Section } from "@/lib/types";
-import { generateLayoutTemplate } from "@/lib/templates";
-import { useClipboardCopy } from "@/hook/useClipboardCopy";
-import {
-  type FlowGuards,
-  type FlowNextMap,
-  type FlowTransitions,
-  useFlowState,
-} from "@/hook/useFlowState";
-import { useSectionMeta } from "@/hook/useSectionMeta";
-import { useTask } from "@/hook/useTask";
-import { useTextDownload } from "@/hook/useTextDownload";
+import type { BlogType, Phase, Project, Section } from "@/lib/types";
+import { useAgentFlow } from "@/hook/useAgentFlow";
 import { AgentPanel } from "./agent-panel";
 import { DraftViewer } from "./draft-viewer";
 import { NotesEditor } from "./notes-editor";
 import { OutlineTree } from "./outline-tree";
 import { PhaseStepper } from "./phase-stepper";
 import { SectionDetail } from "./section-detail";
-import { delay } from "es-toolkit";
 
 interface WritingWorkspaceProps {
   project: Project;
@@ -31,249 +18,91 @@ interface WritingWorkspaceProps {
   onBack: () => void;
 }
 
-const FLOW_TRANSITIONS: FlowTransitions<Phase> = {
-  type: ["layout"],
-  layout: ["interview"],
-  interview: ["refine"],
-  refine: ["draft"],
-  draft: [],
-};
-
-const FLOW_NEXT: FlowNextMap<Phase> = {
-  type: "layout",
-  layout: "interview",
-  interview: "refine",
-  refine: "draft",
-};
-
 export function WritingWorkspace({
   project,
   onProjectUpdate,
   onBack,
 }: WritingWorkspaceProps) {
-  const [activeSection, setActiveSection] = useState<string | undefined>();
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
   const {
-    value: currentNote,
-    setValue: setCurrentNote,
-    reset: resetCurrentNote,
-  } = useInputState("");
-  const { copy } = useClipboardCopy();
-  const downloadText = useTextDownload();
-  const flowGuards: FlowGuards<Phase> = {
-    layout: () => (project.type ? true : { reason: "type-required" }),
-    interview: () =>
-      project.sections.length > 0 ? true : { reason: "layout-required" },
-  };
-  const flow = useFlowState<Phase>({
-    initial: project.phase,
-    transitions: FLOW_TRANSITIONS,
-    guards: flowGuards,
-    next: FLOW_NEXT,
-  });
-
-  const currentSection = project.sections.find(
-    (section) => section.id === activeSection,
-  );
-  const activeSectionIndex = project.sections.findIndex(
-    (section) => section.id === activeSection,
-  );
-  const previousSection =
-    activeSectionIndex > 0
-      ? project.sections[activeSectionIndex - 1]
-      : undefined;
-
-  const updateProject = useCallback(
-    (updates: Partial<Project>) => {
-      setSaveStatus("saving");
-      const updated = { ...project, ...updates, updatedAt: new Date() };
-      onProjectUpdate(updated);
-      setTimeout(() => setSaveStatus("saved"), 500);
-    },
-    [project, onProjectUpdate],
-  );
-
-  const handleTypeChange = (type: BlogType) => {
-    updateProject({ type });
-  };
-
-  const generateLayoutTask = useTask(async () => {
-    if (!project.type) return;
-    await delay(1000);
-
-    const layoutSections = generateLayoutTemplate(project.type).map(
-      (section) => ({
-        ...section,
-        notes: [] as Note[],
-      }),
-    );
-
-    if (!flow.transition("layout")) return;
-    updateProject({
-      sections: layoutSections,
-      phase: "layout",
-    });
-  });
-
-  const handleStartInterview = () => {
-    const firstSection = project.sections[0];
-    if (!firstSection) return;
-
-    const updatedSections = project.sections.map((section, index) => ({
-      ...section,
-      status: index === 0 ? ("active" as const) : section.status,
-    }));
-    updateProject({
-      sections: updatedSections,
-      phase: flow.transition("interview") ? "interview" : project.phase,
-    });
-    setActiveSection(firstSection.id);
-  };
-
-  const submitNoteTask = useTask(async () => {
-    if (!currentNote.trim() || !activeSection) return;
-    await delay(800);
-
-    const newNote: Note = {
-      id: Date.now().toString(),
-      content: currentNote,
-      timestamp: new Date(),
-    };
-
-    const updatedSections = project.sections.map((section) => {
-      if (section.id !== activeSection) return section;
-
-      const notes = [...section.notes, newNote];
-      const isSufficient = notes.length >= 2;
-      return {
-        ...section,
-        notes,
-        status: isSufficient
-          ? ("sufficient" as const)
-          : ("insufficient" as const),
-      };
-    });
-
-    updateProject({ sections: updatedSections });
-    resetCurrentNote();
-  });
-
-  const handleNextSection = () => {
-    const currentIndex = project.sections.findIndex(
-      (section) => section.id === activeSection,
-    );
-    const nextSection = project.sections[currentIndex + 1];
-
-    if (!nextSection) {
-      if (flow.transition("refine")) {
-        updateProject({ phase: "refine" });
-      }
-      return;
-    }
-
-    const updatedSections = project.sections.map((section, index) => ({
-      ...section,
-      status: index === currentIndex + 1 ? ("active" as const) : section.status,
-    }));
-    updateProject({ sections: updatedSections });
-    setActiveSection(nextSection.id);
-  };
-
-  const handleStartRefine = async () => {
-    await startRefineTask.run();
-  };
-
-  const startRefineTask = useTask(async () => {
-    await delay(1000);
-  });
-
-  const generateDraftTask = useTask(async () => {
-    await delay(1500);
-
-    const draft = buildDraft(project);
-    if (flow.phase !== "draft" && flow.transition("draft")) {
-      updateProject({ draft, phase: "draft" });
-      return;
-    }
-    updateProject({ draft });
-  });
-
-  const handleGenerateLayout = () => generateLayoutTask.run();
-  const handleSubmitNote = () => submitNoteTask.run();
-  const handleGenerateDraft = () => generateDraftTask.run();
-
-  const handleCopy = async () => {
-    await copy(project.draft);
-  };
-
-  const handleExport = () => {
-    downloadText({
-      filename: `${project.title || "draft"}.md`,
-      content: project.draft,
-      mime: "text/markdown",
-    });
-  };
-
-  const isLoading =
-    generateLayoutTask.isRunning ||
-    submitNoteTask.isRunning ||
-    startRefineTask.isRunning ||
-    generateDraftTask.isRunning;
-  const canProceedToNext = currentSection?.status === "sufficient";
-  const { missingInfo, agentQuestion, previousSummary } = useSectionMeta(
+    phase,
+    title,
+    brief,
+    blogType,
+    sections,
+    draft,
+    saveStatus,
+    activeSection,
     currentSection,
-    previousSection,
-  );
+    currentNote,
+    isLoading,
+    canProceedToNext,
+    missingInfo,
+    agentQuestion,
+    previousSummary,
+    setActiveSection,
+    setCurrentNote,
+    onTitleChange,
+    onBriefChange,
+    onTypeChange,
+    onGenerateLayout,
+    onStartInterview,
+    onSubmitNote,
+    onNextSection,
+    onStartRefine,
+    onGenerateDraft,
+    onCopy,
+    onExport,
+  } = useAgentFlow({ project, onProjectUpdate });
 
   return (
     <div className="flex flex-col h-screen bg-background">
       <WorkspaceHeader
-        title={project.title}
-        phase={flow.phase}
+        title={title}
+        phase={phase}
         saveStatus={saveStatus}
         onBack={onBack}
-        onTitleChange={(title) => updateProject({ title })}
+        onTitleChange={onTitleChange}
       />
       <div className="flex-1 flex overflow-hidden">
         <OutlinePanel
-          sections={project.sections}
+          sections={sections}
           activeSection={activeSection}
-          onSectionClick={(sectionId) => setActiveSection(sectionId)}
-          disabled={flow.phase === "type"}
+          onSectionClick={setActiveSection}
+          disabled={phase === "type"}
         />
         <WorkspaceMain
-          phase={flow.phase}
-          project={project}
+          phase={phase}
+          brief={brief}
+          sections={sections}
+          draft={draft}
           activeSection={activeSection}
           currentSection={currentSection}
           currentNote={currentNote}
           onNoteChange={setCurrentNote}
-          onSubmitNote={handleSubmitNote}
-          onSectionClick={(sectionId) => setActiveSection(sectionId)}
-          onBriefChange={(brief) => updateProject({ brief })}
+          onSubmitNote={onSubmitNote}
+          onSectionClick={setActiveSection}
+          onBriefChange={onBriefChange}
         />
         <AgentSidebar
-          phase={flow.phase}
+          phase={phase}
           currentSection={currentSection}
           previousSectionSummary={previousSummary}
-          blogType={project.type}
-          onTypeChange={handleTypeChange}
-          onGenerateLayout={handleGenerateLayout}
-          onStartInterview={handleStartInterview}
-          onSubmitNote={handleSubmitNote}
-          onNextSection={handleNextSection}
-          onStartRefine={handleStartRefine}
-          onGenerateDraft={handleGenerateDraft}
-          onExport={handleExport}
-          onCopy={handleCopy}
+          blogType={blogType}
+          onTypeChange={onTypeChange}
+          onGenerateLayout={onGenerateLayout}
+          onStartInterview={onStartInterview}
+          onSubmitNote={onSubmitNote}
+          onNextSection={onNextSection}
+          onStartRefine={onStartRefine}
+          onGenerateDraft={onGenerateDraft}
+          onExport={onExport}
+          onCopy={onCopy}
           canProceed={canProceedToNext}
           isLoading={isLoading}
           missingInfo={missingInfo}
           agentQuestion={agentQuestion}
           typeReason={
-            project.brief
-              ? "입력된 내용을 분석하여 글 타입을 추론했습니다."
-              : undefined
+            brief ? "입력된 내용을 분석하여 글 타입을 추론했습니다." : undefined
           }
         />
       </div>
@@ -289,7 +118,7 @@ function WorkspaceHeader({
   onTitleChange,
 }: {
   title: string;
-  phase: Project["phase"];
+  phase: Phase;
   saveStatus: "saved" | "saving";
   onBack: () => void;
   onTitleChange: (title: string) => void;
@@ -337,7 +166,7 @@ function OutlinePanel({
   onSectionClick,
   disabled,
 }: {
-  sections: Project["sections"];
+  sections: Section[];
   activeSection?: string;
   onSectionClick: (sectionId: string) => void;
   disabled?: boolean;
@@ -367,7 +196,9 @@ function OutlinePanel({
 
 function WorkspaceMain({
   phase,
-  project,
+  brief,
+  sections,
+  draft,
   activeSection,
   currentSection,
   currentNote,
@@ -376,8 +207,10 @@ function WorkspaceMain({
   onSectionClick,
   onBriefChange,
 }: {
-  phase: Project["phase"];
-  project: Project;
+  phase: Phase;
+  brief: string;
+  sections: Section[];
+  draft: string;
   activeSection?: string;
   currentSection?: Section;
   currentNote: string;
@@ -389,7 +222,7 @@ function WorkspaceMain({
   return (
     <main className="flex-1 p-6 overflow-y-auto">
       {phase === "type" && (
-        <TypePhase brief={project.brief} onBriefChange={onBriefChange} />
+        <TypePhase brief={brief} onBriefChange={onBriefChange} />
       )}
       {phase === "layout" && <LayoutPhase section={currentSection} />}
       {phase === "interview" && (
@@ -402,12 +235,12 @@ function WorkspaceMain({
       )}
       {phase === "refine" && (
         <RefinePhase
-          sections={project.sections}
+          sections={sections}
           activeSection={activeSection}
           onSectionClick={onSectionClick}
         />
       )}
-      {phase === "draft" && <DraftPhase draft={project.draft} />}
+      {phase === "draft" && <DraftPhase draft={draft} />}
     </main>
   );
 }
@@ -488,7 +321,7 @@ function RefinePhase({
   activeSection,
   onSectionClick,
 }: {
-  sections: Project["sections"];
+  sections: Section[];
   activeSection?: string;
   onSectionClick: (sectionId: string) => void;
 }) {
@@ -523,10 +356,10 @@ function DraftPhase({ draft }: { draft: string }) {
 }
 
 function AgentSidebar(props: {
-  phase: Project["phase"];
+  phase: Phase;
   currentSection?: Section;
   previousSectionSummary?: string;
-  blogType: Project["type"];
+  blogType: BlogType | null;
   onTypeChange: (type: BlogType) => void;
   onGenerateLayout: () => void;
   onStartInterview: () => void;
@@ -547,20 +380,4 @@ function AgentSidebar(props: {
       <AgentPanel {...props} />
     </aside>
   );
-}
-
-function buildDraft(project: Project) {
-  let draft = `# ${project.title}\n\n`;
-  project.sections.forEach((section) => {
-    const level = section.level === "h2" ? "##" : "###";
-    draft += `${level} ${section.title}\n\n`;
-    if (section.notes.length > 0) {
-      section.notes.forEach((note) => {
-        draft += `${note.content}\n\n`;
-      });
-    } else {
-      draft += `[이 섹션에 대한 내용이 수집되지 않았습니다.]\n\n`;
-    }
-  });
-  return draft;
 }
