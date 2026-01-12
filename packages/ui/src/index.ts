@@ -13,3 +13,4 @@ export * from "./components/pagination";
 export * from "./components/tabs";
 export * from "./components/typography";
 export * from "./lib/utils";
+export * from "./lib/size";

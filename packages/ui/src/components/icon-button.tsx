@@ -1,14 +1,13 @@
 import { ReactNode, ComponentProps } from "react";
 import { Button } from "./button";
-
-type IconButtonSize = "icon" | "icon-sm" | "icon-lg";
+import type { UISize } from "../lib/size";
 
 export interface IconButtonProps
-  extends Omit<ComponentProps<typeof Button>, "aria-label"> {
+  extends Omit<ComponentProps<typeof Button>, "aria-label" | "size"> {
   icon: ReactNode;
   label?: string;
   position?: "left" | "right";
-  size?: IconButtonSize;
+  size?: UISize;
 }
 
 /**
@@ -19,7 +18,7 @@ export interface IconButtonProps
  * @param icon - 버튼에 표시할 아이콘
  * @param label - 접근성을 위한 aria-label 값 (기본값: "Icon Button")
  * @param position - 아이콘 위치 (기본값: "left")
- * @param size - 버튼 크기 (기본값: "icon-sm")
+ * @param size - 버튼 크기 (기본값: "sm")
  * @param children - 버튼 텍스트 또는 내용
  *
  * @example
@@ -31,7 +30,7 @@ export function IconButton({
   icon,
   label = "Icon Button",
   position = "left",
-  size = "icon-sm",
+  size = "sm",
   type = "button",
   children,
   ...props
