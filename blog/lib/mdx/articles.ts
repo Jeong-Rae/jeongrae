@@ -27,7 +27,8 @@ export function getAllArticleMetas(): ArticleMeta[] {
       );
     }
 
-    const slug = slugify(frontmatter.title);
+    const slugSource = frontmatter.titleEn ?? frontmatter.title;
+    const slug = slugify(slugSource);
     const seriesSlug = frontmatter.series
       ? slugifyOnce(frontmatter.series)
       : undefined;

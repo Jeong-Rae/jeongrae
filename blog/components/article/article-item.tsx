@@ -40,10 +40,11 @@ const sharedStyles = {
     "font-bold text-[20px] leading-[1.6] text-text-strong transition-colors line-clamp-2 group-hover:text-primary",
   summary: "text-sm leading-[1.6] text-text-muted line-clamp-2",
   meta: "text-xs leading-[1.6] text-text-muted mt-3",
-  imageWrapper: "flex-shrink-0 w-[130px] h-[130px] rounded-lg overflow-hidden",
+  imageWrapper:
+    "flex-shrink-0 w-[160px] aspect-[4/3] rounded-lg overflow-hidden",
   imageClassName:
     "w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.2]",
-  imageSize: { width: 130, height: 130 },
+  imageSize: { width: 160, height: 120 },
 };
 
 const variantStyles = {

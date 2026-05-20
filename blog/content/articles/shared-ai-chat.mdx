@@ -1,0 +1,16 @@
+---
+title: "여러명이서 하나의 AI Chat 사용하기"
+titleEn: "Shared AI Chat"
+summary: "비지니스 에듀케이션팀이 내부 클라우드 서비스를 더 빠르고 가깝게 사용할수 있게 만들기~"
+uploadAt: "2025-01-01"
+author: "Jeong-Rae"
+thumbnail: "/shared-ai-chat.png"
+---
+
+Ai Chat의 data를 중간부터 읽을 수 있고, 다른 사용자도 실시간으로 읽을 수 있게하자.
+
+버퍼를 공유하고 cursor부터 읽는 방식을 통해 작업.
+
+-> Memory 성능이 문제가 되지는 않을까? (전체 String Token 응답을 가지고 있어야함.)
+
+성능 분석

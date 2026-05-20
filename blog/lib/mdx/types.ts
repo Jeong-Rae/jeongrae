@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
  */
 export type ArticleFrontmatter = {
   title: string;
+  titleEn?: string;
   summary: string;
   uploadAt: string;
   author?: string;
