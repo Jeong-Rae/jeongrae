@@ -1,0 +1,30 @@
+.about {
+  padding: 40px;
+
+  &__title {
+    margin: 0;
+    font-size: 48px;
+    font-weight: 700;
+  }
+
+  &__content {
+    margin-top: 32px;
+    display: grid;
+    gap: 40px;
+    grid-template-columns: 1.2fr 1fr;
+  }
+
+  &__description {
+    font-size: 32px;
+    color: #334155;
+    line-height: 1.5;
+  }
+
+  &__list { font-size: 24px; color: #334155; }
+  &__stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+  &__statCard { padding: 24px; border-radius: 16px; text-align: center; }
+  &__value { margin: 0; font-size: 52px; font-weight: 700; color: #2563eb; }
+  &__label { margin-top: 8px; font-size: 26px; color: #475569; }
+  &__footer { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
+  &__strengths { display:flex; flex-wrap:wrap; gap:12px; }
+}

@@ -1,0 +1,18 @@
+.experience {
+  margin-top: 48px;
+
+  &__title { margin: 16px 0 0; font-size: 52px; font-weight: 700; }
+  &__description { margin-top: 16px; font-size: 32px; line-height: 1.5; color: #475569; max-width: 780px; }
+  &__list { margin-top: 40px; display: grid; gap: 24px; }
+  &__item { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+  &__period { position:relative; padding-left: 36px; }
+  &__dot { position:absolute; left:0; top:6px; width:20px; height:20px; border-radius:999px; border:4px solid #dbeafe; background:#2563eb; }
+  &__date { margin:0; font-size: 40px; font-weight: 600; }
+  &__duration { margin-top: 8px; font-size: 28px; color: #64748b; }
+  &__card { padding: 32px; }
+  &__header { display:flex; justify-content:space-between; gap:16px; }
+  &__company { margin:0; font-size: 44px; font-weight: 700; }
+  &__role { margin: 8px 0 0; font-size: 34px; color:#475569; }
+  &__skills { display:flex; flex-wrap:wrap; gap:8px; }
+  &__bullets { margin-top: 24px; font-size: 26px; color: #334155; line-height:1.6; }
+}
