@@ -1,0 +1,15 @@
+.resume {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 48px;
+
+  &__hero { padding: 40px; }
+  &__heroGrid { display:grid; gap:32px; grid-template-columns: 280px 1fr; }
+  &__photo { position:relative; width:260px; height:260px; border-radius:999px; overflow:hidden; background:#e2e8f0; }
+  &__name { margin:0; font-size:110px; font-weight:700; }
+  &__title { margin:12px 0 0; font-size:62px; color:#2563eb; font-weight:700; }
+  &__summary { margin-top:24px; max-width:980px; font-size:42px; line-height:1.4; color:#475569; }
+  &__contacts { margin-top:28px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; }
+  &__contactItem { display:flex; align-items:center; gap:10px; border-radius:16px; padding:14px 18px; font-size:24px; color:#334155; }
+  &__sections { margin-top: 40px; display:grid; gap:40px; }
+}

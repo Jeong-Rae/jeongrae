@@ -4,3 +4,4 @@ packages:
   - "quilly"
   - "quilly/*"
   - "packages/*"
+  - "resume"
