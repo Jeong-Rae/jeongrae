@@ -1,0 +1,10 @@
+{
+  "workspaces": [
+    {
+      "workspaceKey": "api",
+      "displayName": "API Server",
+      "absolutePath": "/srv/repos/api",
+      "enabled": true
+    }
+  ]
+}

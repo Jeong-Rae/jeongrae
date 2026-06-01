@@ -1,0 +1,377 @@
+import { mkdirSync } from "node:fs";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import assert from "node:assert/strict";
+import { SqliteConnectionFactory } from "../src/store/connection/SqliteConnectionFactory.ts";
+import { MigrationRunner } from "../src/store/migration/MigrationRunner.ts";
+import { SqliteCodexConversationRepository } from "../src/store/session/SqliteCodexConversationRepository.ts";
+import { SqliteCodexTurnRepository } from "../src/store/thread/SqliteCodexTurnRepository.ts";
+import { SqliteCodexRuntimeEventRepository } from "../src/store/event/SqliteCodexRuntimeEventRepository.ts";
+import { WorkspaceRegistry } from "../src/runtime/workspace/WorkspaceRegistry.ts";
+import { WorkspaceValidator } from "../src/runtime/workspace/WorkspaceValidator.ts";
+import { CodexConversationService } from "../src/core/session/CodexConversationService.ts";
+import { RunCodexTurnService } from "../src/core/turn/RunCodexTurnService.ts";
+import { CodexRuntimeEventBus } from "../src/core/event/CodexRuntimeEventBus.ts";
+import type { CodexSdkClient } from "../src/clients/codex/CodexSdkClient.ts";
+import { CodexSdkStreamError } from "../src/clients/codex/CodexSdkClient.ts";
+import type { DiscordThreadService } from "../src/transport/discord/DiscordThreadService.ts";
+
+async function createStore() {
+  const dir = await mkdtemp(join(tmpdir(), "codex-store-"));
+  const db = new SqliteConnectionFactory(join(dir, "store.sqlite")).create();
+  new MigrationRunner(db).run();
+  return {
+    db,
+    conversations: new SqliteCodexConversationRepository(db),
+    turns: new SqliteCodexTurnRepository(db),
+    events: new SqliteCodexRuntimeEventRepository(db)
+  };
+}
+
+async function createGitWorkspace() {
+  const dir = await mkdtemp(join(tmpdir(), "codex-workspace-"));
+  const workspace = join(dir, "api");
+  mkdirSync(workspace);
+  mkdirSync(join(workspace, ".git"));
+  return workspace;
+}
+
+test("conversation service creates thread mapping and rejects invalid workspace", async () => {
+  const store = await createStore();
+  const workspace = await createGitWorkspace();
+  const discordThreads: DiscordThreadService = {
+    async createPrivateThread() {
+      return { threadId: "discord-thread-1" };
+    }
+  };
+  const codex: CodexSdkClient = {
+    async startThread() {
+      return { codexThreadId: "codex-thread-1" };
+    },
+    async run() {
+      return { finalResponse: "ok" };
+    }
+  };
+  const service = new CodexConversationService({
+    conversationRepository: store.conversations,
+    workspaceRegistry: new WorkspaceRegistry([
+      { workspaceKey: "api", displayName: "API", absolutePath: workspace, enabled: true }
+    ]),
+    workspaceValidator: new WorkspaceValidator(),
+    discordThreadService: discordThreads,
+    codexSdkClient: codex
+  });
+
+  const created = await service.create({
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    workspaceKey: "api",
+    createdBy: "user-1"
+  });
+  assert.equal(created.ok, true);
+  assert.equal(created.conversation?.conversationChannelId, "discord-thread-1");
+  assert.equal(created.conversation?.codexThreadId, "codex-thread-1");
+
+  const invalid = await service.create({
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    workspaceKey: "missing",
+    createdBy: "user-1"
+  });
+  assert.equal(invalid.ok, false);
+  assert.deepEqual(invalid.availableWorkspaceKeys, ["api"]);
+});
+
+test("conversation service deletes created discord thread when downstream creation fails", async () => {
+  const store = await createStore();
+  const workspace = await createGitWorkspace();
+  const deletedThreads: string[] = [];
+  const discordThreads: DiscordThreadService = {
+    async createPrivateThread() {
+      return { threadId: "discord-thread-orphan" };
+    },
+    async deleteThread(threadId) {
+      deletedThreads.push(threadId);
+    }
+  };
+  const codex: CodexSdkClient = {
+    async startThread() {
+      throw new Error("codex unavailable");
+    },
+    async run() {
+      return { finalResponse: "unused" };
+    }
+  };
+  const service = new CodexConversationService({
+    conversationRepository: store.conversations,
+    workspaceRegistry: new WorkspaceRegistry([
+      { workspaceKey: "api", displayName: "API", absolutePath: workspace, enabled: true }
+    ]),
+    workspaceValidator: new WorkspaceValidator(),
+    discordThreadService: discordThreads,
+    codexSdkClient: codex
+  });
+
+  await assert.rejects(
+    () => service.create({
+      discordGuildId: "guild-1",
+      parentChannelId: "parent-1",
+      workspaceKey: "api",
+      createdBy: "user-1"
+    }),
+    /codex unavailable/
+  );
+  assert.deepEqual(deletedThreads, ["discord-thread-orphan"]);
+  assert.deepEqual(await store.conversations.list(), []);
+});
+
+
+test("repositories persist turns/events and enforce running compare-and-set", async () => {
+  const store = await createStore();
+  const now = new Date("2026-06-01T00:00:00.000Z");
+  await store.conversations.create({
+    codexConversationId: "conv-1",
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    conversationChannelId: "channel-1",
+    workspaceKey: "api",
+    workspacePath: "/tmp/api",
+    codexThreadId: "codex-thread-1",
+    status: "idle",
+    permissionMode: "default",
+    createdBy: "user-1",
+    createdAt: now,
+    updatedAt: now
+  });
+
+  assert.equal(await store.conversations.tryMarkRunning("conv-1", now), true);
+  assert.equal(await store.conversations.tryMarkRunning("conv-1", now), false);
+  await store.conversations.updateStatus("conv-1", "idle", now);
+  await store.conversations.updatePermissionModeByChannel("guild-1", "channel-1", "yolo", now);
+
+  await store.turns.create({
+    codexTurnId: "turn-1",
+    codexConversationId: "conv-1",
+    requestedBy: "user-1",
+    userMessage: "hello",
+    status: "running",
+    finalResponse: null,
+    errorMessage: null,
+    createdAt: now,
+    startedAt: now,
+    finishedAt: null
+  });
+  await store.turns.markSucceeded("turn-1", "final", now);
+  await store.events.create({
+    codexRuntimeEventId: "event-1",
+    codexConversationId: "conv-1",
+    codexTurnId: "turn-1",
+    eventType: "turn.completed",
+    payloadJson: "{}",
+    createdAt: now
+  });
+
+  assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.permissionMode, "yolo");
+  assert.equal((await store.turns.listByConversation("conv-1"))[0]?.finalResponse, "final");
+  assert.equal((await store.events.listByConversation("conv-1"))[0]?.eventType, "turn.completed");
+});
+
+test("run service resumes same codex thread, blocks concurrent turns, and restores idle on failure", async () => {
+  const store = await createStore();
+  const now = new Date("2026-06-01T00:00:00.000Z");
+  await store.conversations.create({
+    codexConversationId: "conv-1",
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    conversationChannelId: "channel-1",
+    workspaceKey: "api",
+    workspacePath: "/tmp/api",
+    codexThreadId: "codex-thread-1",
+    status: "idle",
+    permissionMode: "default",
+    createdBy: "user-1",
+    createdAt: now,
+    updatedAt: now
+  });
+
+  const runInputs: string[] = [];
+  const codex: CodexSdkClient = {
+    async startThread() {
+      return { codexThreadId: "unused" };
+    },
+    async run(input) {
+      runInputs.push(input.codexThreadId);
+      if (input.message === "stream-fail") {
+        throw new CodexSdkStreamError("stream boom", [
+          { eventType: "turn.failed", payloadJson: JSON.stringify({ type: "turn.failed", error: { message: "stream boom" } }) }
+        ]);
+      }
+      if (input.message === "fail") throw new Error("boom");
+      return {
+        finalResponse: `answer:${input.message}`,
+        runtimeEvents: [
+          { eventType: "item.completed", payloadJson: JSON.stringify({ item: { type: "agent_message", text: `answer:${input.message}` } }) }
+        ]
+      };
+    }
+  };
+  const service = new RunCodexTurnService({
+    conversationRepository: store.conversations,
+    turnRepository: store.turns,
+    runtimeEventRepository: store.events,
+    eventBus: new CodexRuntimeEventBus(),
+    codexSdkClient: codex
+  });
+
+  const first = await service.run({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    requestedBy: "user-1",
+    userMessage: "hello"
+  });
+  assert.equal(first.status, "succeeded");
+  assert.equal(first.finalResponse, "answer:hello");
+
+  const streamFailed = await service.run({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    requestedBy: "user-1",
+    userMessage: "stream-fail"
+  });
+  assert.equal(streamFailed.status, "failed");
+
+  await store.conversations.tryMarkRunning("conv-1", now);
+  const blocked = await service.run({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    requestedBy: "user-1",
+    userMessage: "second"
+  });
+  assert.equal(blocked.status, "busy");
+  await store.conversations.updateStatus("conv-1", "idle", now);
+
+  const failed = await service.run({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    requestedBy: "user-1",
+    userMessage: "fail"
+  });
+  assert.equal(failed.status, "failed");
+  assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.status, "idle");
+  assert.deepEqual(runInputs, ["codex-thread-1", "codex-thread-1", "codex-thread-1"]);
+  assert.equal(
+    (await store.events.listByConversation("conv-1")).some((event) => event.eventType === "item.completed"),
+    true
+  );
+  assert.equal(
+    (await store.events.listByConversation("conv-1")).some((event) => event.eventType === "turn.failed"),
+    true
+  );
+});
+
+test("run service restores conversation idle when turn creation fails", async () => {
+  const store = await createStore();
+  const now = new Date("2026-06-01T00:00:00.000Z");
+  await store.conversations.create({
+    codexConversationId: "conv-1",
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    conversationChannelId: "channel-1",
+    workspaceKey: "api",
+    workspacePath: "/tmp/api",
+    codexThreadId: "codex-thread-1",
+    status: "idle",
+    permissionMode: "default",
+    createdBy: "user-1",
+    createdAt: now,
+    updatedAt: now
+  });
+  const service = new RunCodexTurnService({
+    conversationRepository: store.conversations,
+    turnRepository: {
+      async create() {
+        throw new Error("turn insert failed");
+      },
+      async listByConversation() {
+        return [];
+      },
+      async markSucceeded() {},
+      async markFailed() {}
+    },
+    runtimeEventRepository: store.events,
+    eventBus: new CodexRuntimeEventBus(),
+    codexSdkClient: {
+      async startThread() {
+        return { codexThreadId: "unused" };
+      },
+      async run() {
+        return { finalResponse: "unused" };
+      }
+    }
+  });
+
+  const result = await service.run({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    requestedBy: "user-1",
+    userMessage: "hello"
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.status, "idle");
+});
+
+test("run service marks failed turn before swallowing failed event persistence", async () => {
+  const store = await createStore();
+  const now = new Date("2026-06-01T00:00:00.000Z");
+  await store.conversations.create({
+    codexConversationId: "conv-1",
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    conversationChannelId: "channel-1",
+    workspaceKey: "api",
+    workspacePath: "/tmp/api",
+    codexThreadId: "codex-thread-1",
+    status: "idle",
+    permissionMode: "default",
+    createdBy: "user-1",
+    createdAt: now,
+    updatedAt: now
+  });
+  const service = new RunCodexTurnService({
+    conversationRepository: store.conversations,
+    turnRepository: store.turns,
+    runtimeEventRepository: {
+      async create() {
+        throw new Error("event insert failed");
+      },
+      async listByConversation() {
+        return [];
+      }
+    },
+    eventBus: new CodexRuntimeEventBus(),
+    codexSdkClient: {
+      async startThread() {
+        return { codexThreadId: "unused" };
+      },
+      async run() {
+        throw new CodexSdkStreamError("stream boom", [
+          { eventType: "turn.failed", payloadJson: JSON.stringify({ type: "turn.failed", error: { message: "stream boom" } }) }
+        ]);
+      }
+    }
+  });
+
+  const result = await service.run({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    requestedBy: "user-1",
+    userMessage: "hello"
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal((await store.turns.listByConversation("conv-1"))[0]?.status, "failed");
+  assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.status, "idle");
+});

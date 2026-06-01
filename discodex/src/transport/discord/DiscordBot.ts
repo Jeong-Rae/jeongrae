@@ -1,0 +1,110 @@
+import { ChannelType, Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, type TextBasedChannel } from "discord.js";
+import type { Logger } from "../../telemetry/logging/Logger.ts";
+import type { DiscordSlashCommandRouter } from "./DiscordSlashCommandRouter.ts";
+import type { DiscordMentionMessageRouter } from "./DiscordMentionMessageRouter.ts";
+import type { CreatePrivateThreadInput, CreatePrivateThreadOutput, DiscordThreadService } from "./DiscordThreadService.ts";
+
+export class DiscordBot implements DiscordThreadService {
+  private readonly client: Client;
+
+  public constructor(private readonly deps: {
+    token: string;
+    applicationId: string;
+    guildId: string;
+    slashCommandRouter: DiscordSlashCommandRouter;
+    mentionMessageRouter: DiscordMentionMessageRouter;
+    logger: Logger;
+  }) {
+    this.client = new Client({
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+      ]
+    });
+  }
+
+  public async start(): Promise<void> {
+    this.client.on("interactionCreate", (interaction) => {
+      void this.handleEvent(async () => {
+        if (interaction.isChatInputCommand()) await this.deps.slashCommandRouter.handle(interaction);
+      }, async (error) => {
+        if (interaction.isRepliable()) {
+          const message = "Codex command 처리 중 오류가 발생했습니다.";
+          if (interaction.deferred || interaction.replied) await interaction.followUp({ content: message, ephemeral: true });
+          else await interaction.reply({ content: message, ephemeral: true });
+        }
+        this.logEventError("discord_interaction_failed", error);
+      });
+    });
+    this.client.on("messageCreate", (message) => {
+      void this.handleEvent(
+        () => this.deps.mentionMessageRouter.handle(message),
+        (error) => {
+          this.logEventError("discord_message_failed", error);
+        }
+      );
+    });
+    await this.registerCommands();
+    await this.client.login(this.deps.token);
+    this.deps.logger.info("discord bot logged in", { eventType: "discord_bot_logged_in" });
+  }
+
+  public async createPrivateThread(input: CreatePrivateThreadInput): Promise<CreatePrivateThreadOutput> {
+    const channel = await this.client.channels.fetch(input.parentChannelId);
+    if (!channel || !("threads" in channel)) {
+      throw new Error(`Channel ${input.parentChannelId} cannot create threads.`);
+    }
+    const thread = await (channel as TextBasedChannel & { threads: { create(input: { name: string; type: ChannelType.PrivateThread }): Promise<{ id: string }> } }).threads.create({
+      name: input.name,
+      type: ChannelType.PrivateThread
+    });
+    return { threadId: thread.id };
+  }
+
+  public async deleteThread(threadId: string): Promise<void> {
+    const channel = await this.client.channels.fetch(threadId);
+    if (channel && "delete" in channel && typeof channel.delete === "function") {
+      await channel.delete();
+    }
+  }
+
+  private async registerCommands(): Promise<void> {
+    const command = new SlashCommandBuilder()
+      .setName("codex")
+      .setDescription("Codex conversation commands")
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("new")
+          .setDescription("Create a new Codex conversation")
+          .addStringOption((option) => option.setName("cwd").setDescription("Workspace alias").setRequired(true))
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("yolo")
+          .setDescription("Enable yolo permission mode for this conversation")
+      );
+
+    const rest = new REST({ version: "10" }).setToken(this.deps.token);
+    await rest.put(Routes.applicationGuildCommands(this.deps.applicationId, this.deps.guildId), { body: [command.toJSON()] });
+  }
+
+  private async handleEvent(action: () => Promise<void>, onError: (error: unknown) => Promise<void> | void): Promise<void> {
+    try {
+      await action();
+    } catch (error) {
+      try {
+        await onError(error);
+      } catch (handlerError) {
+        this.logEventError("discord_error_handler_failed", handlerError);
+      }
+    }
+  }
+
+  private logEventError(eventType: string, error: unknown): void {
+    this.deps.logger.error("discord event handler failed", {
+      eventType,
+      errorMessage: error instanceof Error ? error.message : String(error)
+    });
+  }
+}
