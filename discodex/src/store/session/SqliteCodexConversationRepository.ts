@@ -1,8 +1,9 @@
 import type { SqliteDatabase } from "../connection/SqliteConnectionFactory.ts";
-import type { CodexConversationRepository } from "../../core/session/CodexConversationRepository.ts";
+import type { CodexConversationRepository, UpdateModelConfigInput } from "../../core/session/CodexConversationRepository.ts";
 import type { CodexConversation } from "../../core/session/CodexConversation.ts";
 import type { CodexConversationStatus } from "../../core/session/CodexConversationStatus.ts";
 import type { PermissionMode } from "../../core/policy/PermissionMode.ts";
+import { isReasoningEffort, type ReasoningEffort } from "../../core/model/ReasoningEffort.ts";
 
 type ConversationRow = {
   codex_conversation_id: string;
@@ -15,12 +16,14 @@ type ConversationRow = {
   codex_thread_id: string;
   status: CodexConversationStatus;
   permission_mode: PermissionMode;
+  model: string | null;
+  reasoning_effort: ReasoningEffort | null;
   created_by: string;
   created_at: string;
   updated_at: string;
 };
 
-function toRow(conversation: CodexConversation): Record<string, string> {
+function toRow(conversation: CodexConversation): Record<string, string | null> {
   return {
     codex_conversation_id: conversation.codexConversationId,
     discord_guild_id: conversation.discordGuildId,
@@ -32,6 +35,8 @@ function toRow(conversation: CodexConversation): Record<string, string> {
     codex_thread_id: conversation.codexThreadId,
     status: conversation.status,
     permission_mode: conversation.permissionMode,
+    model: conversation.model,
+    reasoning_effort: conversation.reasoningEffort,
     created_by: conversation.createdBy,
     created_at: conversation.createdAt.toISOString(),
     updated_at: conversation.updatedAt.toISOString()
@@ -50,6 +55,8 @@ function fromRow(row: ConversationRow): CodexConversation {
     codexThreadId: row.codex_thread_id,
     status: row.status,
     permissionMode: row.permission_mode,
+    model: row.model,
+    reasoningEffort: row.reasoning_effort,
     createdBy: row.created_by,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at)
@@ -63,10 +70,10 @@ export class SqliteCodexConversationRepository implements CodexConversationRepos
     this.db.prepare(`
       INSERT INTO codex_conversation (
         codex_conversation_id, discord_guild_id, parent_channel_id, conversation_channel_id,
-        workspace_key, workspace_path, workspace_source, codex_thread_id, status, permission_mode, created_by, created_at, updated_at
+        workspace_key, workspace_path, workspace_source, codex_thread_id, status, permission_mode, model, reasoning_effort, created_by, created_at, updated_at
       ) VALUES (
         @codex_conversation_id, @discord_guild_id, @parent_channel_id, @conversation_channel_id,
-        @workspace_key, @workspace_path, @workspace_source, @codex_thread_id, @status, @permission_mode, @created_by, @created_at, @updated_at
+        @workspace_key, @workspace_path, @workspace_source, @codex_thread_id, @status, @permission_mode, @model, @reasoning_effort, @created_by, @created_at, @updated_at
       )
     `).run(toRow(conversation));
   }
@@ -106,5 +113,26 @@ export class SqliteCodexConversationRepository implements CodexConversationRepos
       WHERE discord_guild_id = ? AND conversation_channel_id = ?
     `).run(permissionMode, updatedAt.toISOString(), discordGuildId, conversationChannelId);
     return this.findByChannel(discordGuildId, conversationChannelId);
+  }
+
+  public async updateModelConfigByChannel(input: UpdateModelConfigInput): Promise<CodexConversation | null> {
+    if (input.reasoningEffort !== undefined && !isReasoningEffort(input.reasoningEffort)) {
+      throw new Error(`Invalid reasoning_effort: ${input.reasoningEffort}`);
+    }
+    const current = await this.findByChannel(input.discordGuildId, input.conversationChannelId);
+    if (!current) return null;
+
+    this.db.prepare(`
+      UPDATE codex_conversation
+      SET model = ?, reasoning_effort = ?, updated_at = ?
+      WHERE discord_guild_id = ? AND conversation_channel_id = ?
+    `).run(
+      input.model === undefined ? current.model : input.model,
+      input.reasoningEffort === undefined ? current.reasoningEffort : input.reasoningEffort,
+      input.updatedAt.toISOString(),
+      input.discordGuildId,
+      input.conversationChannelId
+    );
+    return this.findByChannel(input.discordGuildId, input.conversationChannelId);
   }
 }

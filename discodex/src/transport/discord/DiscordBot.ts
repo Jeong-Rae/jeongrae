@@ -1,5 +1,6 @@
 import { ChannelType, Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, type TextBasedChannel } from "discord.js";
 import type { Logger } from "../../telemetry/logging/Logger.ts";
+import { REASONING_EFFORT_VALUES } from "../../core/model/ReasoningEffort.ts";
 import type { DiscordSlashCommandRouter } from "./DiscordSlashCommandRouter.ts";
 import type { DiscordMentionMessageRouter } from "./DiscordMentionMessageRouter.ts";
 import type { CreatePrivateThreadInput, CreatePrivateThreadOutput, DiscordThreadService } from "./DiscordThreadService.ts";
@@ -88,23 +89,8 @@ export class DiscordBot implements DiscordThreadService {
   }
 
   private async registerCommands(): Promise<void> {
-    const command = new SlashCommandBuilder()
-      .setName("codex")
-      .setDescription("Codex conversation commands")
-      .addSubcommand((subcommand) =>
-        subcommand
-          .setName("new")
-          .setDescription("Create a new Codex conversation")
-          .addStringOption((option) => option.setName("cwd").setDescription("Workspace alias").setRequired(true))
-      )
-      .addSubcommand((subcommand) =>
-        subcommand
-          .setName("yolo")
-          .setDescription("Enable yolo permission mode for this conversation")
-      );
-
     const rest = new REST({ version: "10" }).setToken(this.deps.token);
-    await rest.put(Routes.applicationGuildCommands(this.deps.applicationId, this.deps.guildId), { body: [command.toJSON()] });
+    await rest.put(Routes.applicationGuildCommands(this.deps.applicationId, this.deps.guildId), { body: [buildCodexSlashCommand().toJSON()] });
   }
 
   private async handleEvent(action: () => Promise<void>, onError: (error: unknown) => Promise<void> | void): Promise<void> {
@@ -125,4 +111,39 @@ export class DiscordBot implements DiscordThreadService {
       errorMessage: error instanceof Error ? error.message : String(error)
     });
   }
+}
+
+export function buildCodexSlashCommand() {
+  return new SlashCommandBuilder()
+    .setName("codex")
+    .setDescription("Codex conversation commands")
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("new")
+        .setDescription("Create a new Codex conversation")
+        .addStringOption((option) => option.setName("cwd").setDescription("Workspace alias").setRequired(true))
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("yolo")
+        .setDescription("Enable yolo permission mode for this conversation")
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("model")
+        .setDescription("Show or update model settings for this conversation")
+        .addStringOption((option) => option.setName("model").setDescription("Codex model").setRequired(false))
+        .addStringOption((option) => {
+          const effortOption = option.setName("effort").setDescription("Reasoning effort").setRequired(false);
+          for (const effort of REASONING_EFFORT_VALUES) {
+            effortOption.addChoices({ name: effort, value: effort });
+          }
+          return effortOption;
+        })
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("status")
+        .setDescription("Show Codex conversation status")
+    );
 }

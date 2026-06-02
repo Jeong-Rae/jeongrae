@@ -78,6 +78,8 @@ test("conversation service creates thread mapping and rejects invalid workspace"
   assert.equal(created.conversation?.conversationChannelId, "discord-thread-1");
   assert.equal(created.conversation?.codexThreadId, "codex-thread-1");
   assert.equal(created.conversation?.workspaceSource, "alias");
+  assert.equal(created.conversation?.model, null);
+  assert.equal(created.conversation?.reasoningEffort, null);
   assert.deepEqual(privateThreadInputs[0], {
     parentChannelId: "parent-1",
     name: "codex-api",
@@ -162,6 +164,8 @@ test("repositories persist turns/events and expose running turn count", async ()
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
+    model: null,
+    reasoningEffort: null,
     createdBy: "user-1",
     createdAt: now,
     updatedAt: now
@@ -198,6 +202,155 @@ test("repositories persist turns/events and expose running turn count", async ()
   assert.equal((await store.events.listByConversation("conv-1"))[0]?.eventType, "turn.completed");
 });
 
+test("repository persists conversation model config and keeps omitted fields", async () => {
+  const store = await createStore();
+  const now = new Date("2026-06-01T00:00:00.000Z");
+  await store.conversations.create({
+    codexConversationId: "conv-1",
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    conversationChannelId: "channel-1",
+    workspaceKey: "api",
+    workspacePath: "/tmp/api",
+    workspaceSource: "alias",
+    codexThreadId: "codex-thread-1",
+    status: "idle",
+    permissionMode: "default",
+    model: null,
+    reasoningEffort: null,
+    createdBy: "user-1",
+    createdAt: now,
+    updatedAt: now
+  });
+
+  const fullUpdate = await store.conversations.updateModelConfigByChannel({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    model: "gpt-5.5",
+    reasoningEffort: "high",
+    updatedAt: new Date("2026-06-01T00:01:00.000Z")
+  });
+  assert.equal(fullUpdate?.model, "gpt-5.5");
+  assert.equal(fullUpdate?.reasoningEffort, "high");
+
+  const modelOnly = await store.conversations.updateModelConfigByChannel({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    model: "gpt-5.6",
+    updatedAt: new Date("2026-06-01T00:02:00.000Z")
+  });
+  assert.equal(modelOnly?.model, "gpt-5.6");
+  assert.equal(modelOnly?.reasoningEffort, "high");
+
+  const effortOnly = await store.conversations.updateModelConfigByChannel({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    reasoningEffort: "low",
+    updatedAt: new Date("2026-06-01T00:03:00.000Z")
+  });
+  assert.equal(effortOnly?.model, "gpt-5.6");
+  assert.equal(effortOnly?.reasoningEffort, "low");
+
+  assert.equal(
+    await store.conversations.updateModelConfigByChannel({
+      discordGuildId: "guild-1",
+      conversationChannelId: "missing",
+      model: "gpt-5.5",
+      updatedAt: now
+    }),
+    null
+  );
+  assert.throws(
+    () => store.db.prepare("UPDATE codex_conversation SET reasoning_effort = 'bad' WHERE codex_conversation_id = 'conv-1'").run(),
+    /reasoning_effort/
+  );
+});
+
+test("conversation service returns and validates model config and status", async () => {
+  const store = await createStore();
+  const now = new Date("2026-06-01T00:00:00.000Z");
+  await store.conversations.create({
+    codexConversationId: "conv-1",
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    conversationChannelId: "channel-1",
+    workspaceKey: "api",
+    workspacePath: "/tmp/api",
+    workspaceSource: "alias",
+    codexThreadId: "codex-thread-1",
+    status: "idle",
+    permissionMode: "default",
+    model: null,
+    reasoningEffort: null,
+    createdBy: "user-1",
+    createdAt: now,
+    updatedAt: now
+  });
+  await store.turns.create({
+    codexTurnId: "turn-1",
+    codexConversationId: "conv-1",
+    requestedBy: "user-1",
+    userMessage: "hello",
+    status: "running",
+    finalResponse: null,
+    errorMessage: null,
+    createdAt: now,
+    startedAt: now,
+    finishedAt: null
+  });
+
+  const service = new CodexConversationService({
+    conversationRepository: store.conversations,
+    turnRepository: store.turns,
+    debugBaseUrl: "http://localhost:3000",
+    workspaceRegistry: new WorkspaceRegistry([]),
+    workspaceValidator: new WorkspaceValidator(),
+    discordThreadService: { async createPrivateThread() { return { threadId: "unused" }; } },
+    codexSdkClient: { async startThread() { return { codexThreadId: "unused" }; }, async run() { return { finalResponse: "unused" }; } }
+  });
+
+  assert.deepEqual(await service.getModelConfig("guild-1", "missing"), { status: "not_found" });
+  assert.deepEqual(await service.getModelConfig("guild-1", "channel-1"), {
+    status: "found",
+    model: null,
+    reasoningEffort: null
+  });
+  assert.deepEqual(await service.updateModelConfig({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    model: "",
+    reasoningEffort: "high"
+  }), { status: "invalid_model" });
+  assert.deepEqual(await service.updateModelConfig({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1",
+    model: "gpt-5.5",
+    reasoningEffort: "xhigh"
+  }), {
+    status: "updated",
+    model: "gpt-5.5",
+    reasoningEffort: "xhigh"
+  });
+  assert.deepEqual(await service.updateModelConfig({
+    discordGuildId: "guild-1",
+    conversationChannelId: "channel-1"
+  }), {
+    status: "found",
+    model: "gpt-5.5",
+    reasoningEffort: "xhigh"
+  });
+
+  const status = await service.getStatus("guild-1", "channel-1");
+  assert.equal(status.status, "found");
+  if (status.status === "found") {
+    assert.equal(status.conversation.workspacePath, "/tmp/api");
+    assert.equal(status.runningTurnCount, 1);
+    assert.equal(status.debugUrl, "http://localhost:3000/?conversation=conv-1");
+    assert.equal(status.conversation.model, "gpt-5.5");
+    assert.equal(status.conversation.reasoningEffort, "xhigh");
+  }
+});
+
 test("run service resumes same codex thread, allows concurrent turns, and restores display status on failure", async () => {
   const store = await createStore();
   const now = new Date("2026-06-01T00:00:00.000Z");
@@ -212,18 +365,24 @@ test("run service resumes same codex thread, allows concurrent turns, and restor
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
+    model: "gpt-5.5",
+    reasoningEffort: "high",
     createdBy: "user-1",
     createdAt: now,
     updatedAt: now
   });
 
-  const runInputs: string[] = [];
+  const runInputs: Array<{ codexThreadId: string; model?: string; reasoningEffort?: string }> = [];
   const codex: CodexSdkClient = {
     async startThread() {
       return { codexThreadId: "unused" };
     },
     async run(input) {
-      runInputs.push(input.codexThreadId);
+      runInputs.push({
+        codexThreadId: input.codexThreadId,
+        model: input.model,
+        reasoningEffort: input.reasoningEffort
+      });
       if (input.message === "stream-fail") {
         throw new CodexSdkStreamError("stream boom", [
           { eventType: "turn.failed", payloadJson: JSON.stringify({ type: "turn.failed", error: { message: "stream boom" } }) }
@@ -281,7 +440,12 @@ test("run service resumes same codex thread, allows concurrent turns, and restor
   });
   assert.equal(failed.status, "failed");
   assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.status, "idle");
-  assert.deepEqual(runInputs, ["codex-thread-1", "codex-thread-1", "codex-thread-1", "codex-thread-1"]);
+  assert.deepEqual(runInputs, [
+    { codexThreadId: "codex-thread-1", model: "gpt-5.5", reasoningEffort: "high" },
+    { codexThreadId: "codex-thread-1", model: "gpt-5.5", reasoningEffort: "high" },
+    { codexThreadId: "codex-thread-1", model: "gpt-5.5", reasoningEffort: "high" },
+    { codexThreadId: "codex-thread-1", model: "gpt-5.5", reasoningEffort: "high" }
+  ]);
   assert.equal(
     (await store.events.listByConversation("conv-1")).some((event) => event.eventType === "item.completed"),
     true
@@ -306,6 +470,8 @@ test("run service restores conversation idle when turn creation fails", async ()
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
+    model: null,
+    reasoningEffort: null,
     createdBy: "user-1",
     createdAt: now,
     updatedAt: now
@@ -362,6 +528,8 @@ test("run service marks failed turn before swallowing failed event persistence",
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
+    model: null,
+    reasoningEffort: null,
     createdBy: "user-1",
     createdAt: now,
     updatedAt: now

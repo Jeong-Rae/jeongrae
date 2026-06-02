@@ -1,5 +1,6 @@
 import type { PermissionMode } from "../policy/PermissionMode.ts";
 import type { CodexConversationStatus } from "./CodexConversationStatus.ts";
+import type { ReasoningEffort } from "../model/ReasoningEffort.ts";
 
 export type DiscordGuildId = string;
 export type DiscordChannelId = string;
@@ -24,6 +25,8 @@ export type CodexConversation = {
   codexThreadId: CodexThreadId;
   status: CodexConversationStatus;
   permissionMode: PermissionMode;
+  model: string | null;
+  reasoningEffort: ReasoningEffort | null;
   createdBy: DiscordUserId;
   createdAt: Date;
   updatedAt: Date;

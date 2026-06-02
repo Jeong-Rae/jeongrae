@@ -7,6 +7,8 @@ export type CodexConversationResponse = {
   codexThreadId: string;
   status: "idle" | "running" | "closed";
   permissionMode: "default" | "yolo";
+  model: string | null;
+  reasoningEffort: "minimal" | "low" | "medium" | "high" | "xhigh" | null;
   runningTurnCount: number;
   createdAt: string;
   updatedAt: string;

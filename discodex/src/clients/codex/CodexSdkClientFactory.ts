@@ -1,4 +1,4 @@
-import { Codex, type ThreadEvent, type ThreadOptions } from "@openai/codex-sdk";
+import { Codex, type ModelReasoningEffort, type ThreadEvent, type ThreadOptions } from "@openai/codex-sdk";
 import type { PermissionMode } from "../../core/policy/PermissionMode.ts";
 import { CodexSdkStreamError, type CodexSdkClient, type RunCodexInput, type RunCodexOutput, type StartCodexThreadInput, type StartCodexThreadOutput } from "./CodexSdkClient.ts";
 
@@ -14,7 +14,7 @@ class OpenAiCodexSdkClient implements CodexSdkClient {
   public constructor(private readonly apiKey?: string, private readonly codexHome?: string) {}
 
   public async startThread(input: StartCodexThreadInput): Promise<StartCodexThreadOutput> {
-    const thread = this.createCodex(input.permissionMode).startThread(this.threadOptions(input.workspacePath, input.permissionMode));
+    const thread = this.createCodex(input.permissionMode).startThread(createThreadOptions(input.workspacePath, input.permissionMode, {}));
     const result = await thread.run("Start this Codex conversation. Reply briefly that the session is ready.");
     const codexThreadId = thread.id;
     if (!codexThreadId) {
@@ -24,7 +24,10 @@ class OpenAiCodexSdkClient implements CodexSdkClient {
   }
 
   public async run(input: RunCodexInput): Promise<RunCodexOutput> {
-    const thread = this.createCodex(input.permissionMode).resumeThread(input.codexThreadId, this.threadOptions(input.workspacePath, input.permissionMode));
+    const thread = this.createCodex(input.permissionMode).resumeThread(input.codexThreadId, createThreadOptions(input.workspacePath, input.permissionMode, {
+      model: input.model,
+      reasoningEffort: input.reasoningEffort
+    }));
     const result = await thread.runStreamed(input.message);
     const runtimeEvents: Array<{ eventType: string; payloadJson: string }> = [];
     let finalResponse = "";
@@ -55,14 +58,20 @@ class OpenAiCodexSdkClient implements CodexSdkClient {
       env: createCodexEnvironment(this.codexHome)
     });
   }
+}
 
-  private threadOptions(workspacePath: string, permissionMode: PermissionMode): ThreadOptions {
-    return {
-      workingDirectory: workspacePath,
-      approvalPolicy: permissionMode === "yolo" ? "never" : "on-request",
-      sandboxMode: permissionMode === "yolo" ? "danger-full-access" : "workspace-write"
-    };
-  }
+export function createThreadOptions(
+  workspacePath: string,
+  permissionMode: PermissionMode,
+  modelConfig: { model?: string; reasoningEffort?: ModelReasoningEffort }
+): ThreadOptions {
+  return {
+    workingDirectory: workspacePath,
+    approvalPolicy: permissionMode === "yolo" ? "never" : "on-request",
+    sandboxMode: permissionMode === "yolo" ? "danger-full-access" : "workspace-write",
+    ...(modelConfig.model === undefined ? {} : { model: modelConfig.model }),
+    ...(modelConfig.reasoningEffort === undefined ? {} : { modelReasoningEffort: modelConfig.reasoningEffort })
+  };
 }
 
 export function createCodexEnvironment(codexHome: string | undefined, baseEnv: NodeJS.ProcessEnv = process.env): Record<string, string> | undefined {

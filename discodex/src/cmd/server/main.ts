@@ -41,6 +41,8 @@ async function main(): Promise<void> {
 
   const conversationService = new CodexConversationService({
     conversationRepository,
+    turnRepository,
+    debugBaseUrl: `http://localhost:${config.httpPort}`,
     workspaceRegistry: new WorkspaceRegistry(workspaceConfig.workspaces),
     workspaceValidator: new WorkspaceValidator(),
     discordThreadService: {

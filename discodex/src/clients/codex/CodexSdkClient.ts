@@ -1,7 +1,13 @@
 import type { CodexThreadId, WorkspacePath } from "../../core/session/CodexConversation.ts";
 import type { PermissionMode } from "../../core/policy/PermissionMode.ts";
+import type { ReasoningEffort } from "../../core/model/ReasoningEffort.ts";
 
-export type RunCodexInput = {
+export type CodexModelConfig = {
+  model?: string;
+  reasoningEffort?: ReasoningEffort;
+};
+
+export type RunCodexInput = CodexModelConfig & {
   codexThreadId: CodexThreadId;
   workspacePath: WorkspacePath;
   permissionMode: PermissionMode;

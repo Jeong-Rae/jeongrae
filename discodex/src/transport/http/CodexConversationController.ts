@@ -52,6 +52,8 @@ export class CodexConversationController {
       codexThreadId: conversation.codexThreadId,
       status: conversation.status === "closed" ? "closed" : runningTurnCount > 0 ? "running" : "idle",
       permissionMode: conversation.permissionMode,
+      model: conversation.model,
+      reasoningEffort: conversation.reasoningEffort,
       runningTurnCount,
       createdAt: conversation.createdAt.toISOString(),
       updatedAt: conversation.updatedAt.toISOString()

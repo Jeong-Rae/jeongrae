@@ -57,6 +57,8 @@ export class RunCodexTurnService {
         codexThreadId: conversation.codexThreadId,
         workspacePath: conversation.workspacePath,
         permissionMode: conversation.permissionMode,
+        ...(conversation.model === null ? {} : { model: conversation.model }),
+        ...(conversation.reasoningEffort === null ? {} : { reasoningEffort: conversation.reasoningEffort }),
         message: request.userMessage
       });
       for (const runtimeEvent of output.runtimeEvents ?? []) {

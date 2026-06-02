@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DiscordMessageText } from "../src/support/text/DiscordMessageText.ts";
+import { buildCodexSlashCommand } from "../src/transport/discord/DiscordBot.ts";
 import { DiscordMessageRenderer } from "../src/transport/discord/DiscordMessageRenderer.ts";
+import { DiscordSlashCommandRouter } from "../src/transport/discord/DiscordSlashCommandRouter.ts";
 import { DiscordMentionMessageRouter } from "../src/transport/discord/DiscordMentionMessageRouter.ts";
 import { ConsoleLogger, redactSecrets } from "../src/telemetry/logging/ConsoleLogger.ts";
 import { CodexRuntimeEventBus } from "../src/core/event/CodexRuntimeEventBus.ts";
@@ -41,6 +43,94 @@ test("message renderer uses spec text and truncates long final responses", () =>
   const rendered = renderer.renderRunSucceeded(long, "conv-1");
   assert.ok(rendered.length <= 1800);
   assert.match(rendered, /Web Debug UI/);
+});
+
+test("message renderer formats model config, status, and validation errors", () => {
+  const renderer = new DiscordMessageRenderer("http://localhost:3000");
+  assert.equal(renderer.renderModelConfig({ model: null, reasoningEffort: null }), "현재 Codex model 설정\n\nModel: Codex CLI default\nEffort: Codex CLI default\n\n변경 예:\n/codex model model:gpt-5.5 effort:high\n\nEffort values: minimal, low, medium, high, xhigh");
+  assert.equal(renderer.renderModelConfigUpdated({ model: "gpt-5.5", reasoningEffort: "high" }), "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.");
+  assert.equal(renderer.renderInvalidEffort(), "허용되지 않는 reasoning effort 값입니다.\n\nEffort values: minimal, low, medium, high, xhigh");
+  assert.equal(renderer.renderInvalidModel(), "model 값은 비어 있을 수 없습니다.");
+  assert.match(renderer.renderStatus({
+    conversation: {
+      codexConversationId: "conv-1",
+      workspacePath: "/tmp/api",
+      workspaceSource: "absolute_path",
+      permissionMode: "default",
+      status: "idle",
+      model: null,
+      reasoningEffort: null
+    },
+    runningTurnCount: 0,
+    debugUrl: "http://localhost:3000/?conversation=conv-1"
+  }), /Debug: http:\/\/localhost:3000\/\?conversation=conv-1/);
+});
+
+test("codex slash command registers model and status subcommands", () => {
+  const command = buildCodexSlashCommand().toJSON() as {
+    options: Array<{ name: string; options?: Array<{ name: string; choices?: Array<{ name: string; value: string }> }> }>;
+  };
+  assert.deepEqual(command.options.map((option) => option.name), ["new", "yolo", "model", "status"]);
+  const model = command.options.find((option) => option.name === "model");
+  assert.deepEqual(model?.options?.map((option) => option.name), ["model", "effort"]);
+  assert.deepEqual(model?.options?.find((option) => option.name === "effort")?.choices?.map((choice) => choice.value), ["minimal", "low", "medium", "high", "xhigh"]);
+});
+
+test("slash command router handles model and status with ephemeral replies", async () => {
+  const replies: unknown[] = [];
+  const router = new DiscordSlashCommandRouter({
+    async updateModelConfig(input: unknown) {
+      assert.deepEqual(input, {
+        discordGuildId: "guild-1",
+        conversationChannelId: "channel-1",
+        model: "gpt-5.5",
+        reasoningEffort: "high"
+      });
+      return { status: "updated", model: "gpt-5.5", reasoningEffort: "high" };
+    },
+    async getStatus() {
+      return {
+        status: "found",
+        conversation: {
+          codexConversationId: "conv-1",
+          workspacePath: "/tmp/api",
+          workspaceSource: "alias",
+          permissionMode: "default",
+          status: "idle",
+          model: "gpt-5.5",
+          reasoningEffort: "high"
+        },
+        runningTurnCount: 0,
+        debugUrl: "http://localhost:3000/?conversation=conv-1"
+      };
+    }
+  } as never, new DiscordMessageRenderer("http://localhost:3000"));
+
+  await router.handle({
+    commandName: "codex",
+    guildId: "guild-1",
+    channelId: "channel-1",
+    options: {
+      getSubcommand: () => "model",
+      getString: (name: string) => name === "model" ? "gpt-5.5" : "high"
+    },
+    reply: async (payload: unknown) => { replies.push(payload); }
+  } as never);
+  await router.handle({
+    commandName: "codex",
+    guildId: "guild-1",
+    channelId: "channel-1",
+    options: {
+      getSubcommand: () => "status",
+      getString: () => null
+    },
+    reply: async (payload: unknown) => { replies.push(payload); }
+  } as never);
+
+  assert.deepEqual(replies, [
+    { content: "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.", ephemeral: true },
+    { content: "Codex 세션 상태\n\nWorkspace: /tmp/api\nSource: alias\nPermission: default\nStatus: idle\nRunning turns: 0\nModel: gpt-5.5\nEffort: high\n\nDebug: http://localhost:3000/?conversation=conv-1", ephemeral: true }
+  ]);
 });
 
 test("mention router edits loading message to final Codex response", async () => {
@@ -129,6 +219,8 @@ test("debug http server exposes conversation APIs and event stream", async () =>
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
+    model: "gpt-5.5",
+    reasoningEffort: "high",
     createdBy: "user-1",
     createdAt: now,
     updatedAt: now
@@ -161,16 +253,20 @@ test("debug http server exposes conversation APIs and event stream", async () =>
   try {
     const { port } = server.address() as AddressInfo;
     const baseUrl = `http://127.0.0.1:${port}`;
-    const list = await (await fetch(`${baseUrl}/api/conversations`)).json() as { conversations: Array<{ codexConversationId: string }> };
-    const detail = await (await fetch(`${baseUrl}/api/conversations/conv-1`)).json() as { conversation: { codexThreadId: string; runningTurnCount: number; workspaceSource: string } };
+    const list = await (await fetch(`${baseUrl}/api/conversations`)).json() as { conversations: Array<{ codexConversationId: string; model: string | null; reasoningEffort: string | null }> };
+    const detail = await (await fetch(`${baseUrl}/api/conversations/conv-1`)).json() as { conversation: { codexThreadId: string; runningTurnCount: number; workspaceSource: string; model: string | null; reasoningEffort: string | null } };
     const turnList = await (await fetch(`${baseUrl}/api/conversations/conv-1/turns`)).json() as { turns: Array<{ finalResponse: string | null }> };
     const abort = new AbortController();
     const stream = await fetch(`${baseUrl}/api/conversations/conv-1/events/stream`, { signal: abort.signal });
 
     assert.equal(list.conversations[0]?.codexConversationId, "conv-1");
+    assert.equal(list.conversations[0]?.model, "gpt-5.5");
+    assert.equal(list.conversations[0]?.reasoningEffort, "high");
     assert.equal(detail.conversation.codexThreadId, "codex-thread-1");
     assert.equal(detail.conversation.workspaceSource, "alias");
     assert.equal(detail.conversation.runningTurnCount, 0);
+    assert.equal(detail.conversation.model, "gpt-5.5");
+    assert.equal(detail.conversation.reasoningEffort, "high");
     assert.equal(turnList.turns[0]?.finalResponse, "world");
     eventBus.publish({
       codexRuntimeEventId: "event-1",

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createCodexEnvironment } from "../src/clients/codex/CodexSdkClientFactory.ts";
+import { createCodexEnvironment, createThreadOptions } from "../src/clients/codex/CodexSdkClientFactory.ts";
 import { EnvironmentConfigLoader } from "../src/config/loader/EnvironmentConfigLoader.ts";
 import { WorkspaceConfigLoader } from "../src/config/loader/WorkspaceConfigLoader.ts";
 import { WorkspaceRegistry } from "../src/runtime/workspace/WorkspaceRegistry.ts";
@@ -56,6 +56,21 @@ test("Codex SDK environment is only overridden when CODEX_HOME is explicit", () 
   assert.deepEqual(createCodexEnvironment("/tmp/codex-home", { PATH: "/bin" }), {
     PATH: "/bin",
     CODEX_HOME: "/tmp/codex-home"
+  });
+});
+
+test("Codex SDK thread options include configured model values only when set", () => {
+  assert.deepEqual(createThreadOptions("/tmp/api", "default", {}), {
+    workingDirectory: "/tmp/api",
+    approvalPolicy: "on-request",
+    sandboxMode: "workspace-write"
+  });
+  assert.deepEqual(createThreadOptions("/tmp/api", "yolo", { model: "gpt-5.5", reasoningEffort: "high" }), {
+    workingDirectory: "/tmp/api",
+    approvalPolicy: "never",
+    sandboxMode: "danger-full-access",
+    model: "gpt-5.5",
+    modelReasoningEffort: "high"
   });
 });
 
