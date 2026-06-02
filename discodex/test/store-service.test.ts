@@ -303,6 +303,43 @@ test("conversation service returns and validates model config and status", async
     conversationRepository: store.conversations,
     turnRepository: store.turns,
     debugBaseUrl: "http://localhost:3000",
+    runtimeStatusProvider: {
+      async getStatus(input) {
+        return {
+          ok: true,
+          status: {
+            model: input.modelOverride,
+            reasoningEffort: input.reasoningEffortOverride,
+            reasoningSummaries: "auto",
+            directory: input.workspacePath,
+            permissions: "On Request",
+            agentsMd: "/home/codespace/.codex/AGENTS.md",
+            accountEmail: "kkwjdfo@gmail.com",
+            accountPlan: "Plus",
+            collaborationMode: "Default",
+            sessionId: input.codexThreadId,
+            contextWindow: { percentLeft: 57, usedTokens: 117000, totalTokens: 258000 },
+            fiveHourLimit: { percentLeft: 49, resetsAtText: "18:00" },
+            weeklyLimit: { percentLeft: 73, resetsAtText: "03:10 on 8 Jun" }
+          }
+        };
+      },
+      async getEffectiveModelConfig(input) {
+        return {
+          codexConversationId: input.codexConversationId,
+          currentModel: input.modelOverride ?? "gpt-5.5",
+          currentModelUnavailableReason: null,
+          currentReasoningEffort: input.reasoningEffortOverride ?? "high",
+          currentReasoningEffortUnavailableReason: null,
+          currentReasoningSummaries: "auto",
+          currentReasoningSummariesUnavailableReason: null,
+          modelOverride: input.modelOverride,
+          reasoningEffortOverride: input.reasoningEffortOverride,
+          selectableModels: ["gpt-5.5"],
+          selectableEfforts: ["minimal", "low", "medium", "high", "xhigh"]
+        };
+      }
+    },
     workspaceRegistry: new WorkspaceRegistry([]),
     workspaceValidator: new WorkspaceValidator(),
     discordThreadService: { async createPrivateThread() { return { threadId: "unused" }; } },
@@ -312,8 +349,19 @@ test("conversation service returns and validates model config and status", async
   assert.deepEqual(await service.getModelConfig("guild-1", "missing"), { status: "not_found" });
   assert.deepEqual(await service.getModelConfig("guild-1", "channel-1"), {
     status: "found",
-    model: null,
-    reasoningEffort: null
+    config: {
+      codexConversationId: "conv-1",
+      currentModel: "gpt-5.5",
+      currentModelUnavailableReason: null,
+      currentReasoningEffort: "high",
+      currentReasoningEffortUnavailableReason: null,
+      currentReasoningSummaries: "auto",
+      currentReasoningSummariesUnavailableReason: null,
+      modelOverride: null,
+      reasoningEffortOverride: null,
+      selectableModels: ["gpt-5.5"],
+      selectableEfforts: ["minimal", "low", "medium", "high", "xhigh"]
+    }
   });
   assert.deepEqual(await service.updateModelConfig({
     discordGuildId: "guild-1",
@@ -328,26 +376,47 @@ test("conversation service returns and validates model config and status", async
     reasoningEffort: "xhigh"
   }), {
     status: "updated",
-    model: "gpt-5.5",
-    reasoningEffort: "xhigh"
+    config: {
+      codexConversationId: "conv-1",
+      currentModel: "gpt-5.5",
+      currentModelUnavailableReason: null,
+      currentReasoningEffort: "xhigh",
+      currentReasoningEffortUnavailableReason: null,
+      currentReasoningSummaries: "auto",
+      currentReasoningSummariesUnavailableReason: null,
+      modelOverride: "gpt-5.5",
+      reasoningEffortOverride: "xhigh",
+      selectableModels: ["gpt-5.5"],
+      selectableEfforts: ["minimal", "low", "medium", "high", "xhigh"]
+    }
   });
   assert.deepEqual(await service.updateModelConfig({
     discordGuildId: "guild-1",
     conversationChannelId: "channel-1"
   }), {
     status: "found",
-    model: "gpt-5.5",
-    reasoningEffort: "xhigh"
+    config: {
+      codexConversationId: "conv-1",
+      currentModel: "gpt-5.5",
+      currentModelUnavailableReason: null,
+      currentReasoningEffort: "xhigh",
+      currentReasoningEffortUnavailableReason: null,
+      currentReasoningSummaries: "auto",
+      currentReasoningSummariesUnavailableReason: null,
+      modelOverride: "gpt-5.5",
+      reasoningEffortOverride: "xhigh",
+      selectableModels: ["gpt-5.5"],
+      selectableEfforts: ["minimal", "low", "medium", "high", "xhigh"]
+    }
   });
 
   const status = await service.getStatus("guild-1", "channel-1");
   assert.equal(status.status, "found");
   if (status.status === "found") {
-    assert.equal(status.conversation.workspacePath, "/tmp/api");
-    assert.equal(status.runningTurnCount, 1);
-    assert.equal(status.debugUrl, "http://localhost:3000/?conversation=conv-1");
-    assert.equal(status.conversation.model, "gpt-5.5");
-    assert.equal(status.conversation.reasoningEffort, "xhigh");
+    assert.equal(status.runtimeStatus.directory, "/tmp/api");
+    assert.equal(status.runtimeStatus.model, "gpt-5.5");
+    assert.equal(status.runtimeStatus.reasoningEffort, "xhigh");
+    assert.equal(status.runtimeStatus.contextWindow.percentLeft, 57);
   }
 });
 

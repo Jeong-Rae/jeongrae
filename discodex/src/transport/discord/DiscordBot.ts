@@ -2,6 +2,7 @@ import { ChannelType, Client, GatewayIntentBits, REST, Routes, SlashCommandBuild
 import type { Logger } from "../../telemetry/logging/Logger.ts";
 import { REASONING_EFFORT_VALUES } from "../../core/model/ReasoningEffort.ts";
 import type { DiscordSlashCommandRouter } from "./DiscordSlashCommandRouter.ts";
+import type { DiscordComponentInteractionRouter } from "./DiscordComponentInteractionRouter.ts";
 import type { DiscordMentionMessageRouter } from "./DiscordMentionMessageRouter.ts";
 import type { CreatePrivateThreadInput, CreatePrivateThreadOutput, DiscordThreadService } from "./DiscordThreadService.ts";
 
@@ -13,6 +14,7 @@ export class DiscordBot implements DiscordThreadService {
     applicationId: string;
     guildId: string;
     slashCommandRouter: DiscordSlashCommandRouter;
+    componentInteractionRouter: DiscordComponentInteractionRouter;
     mentionMessageRouter: DiscordMentionMessageRouter;
     logger: Logger;
   }) {
@@ -29,6 +31,7 @@ export class DiscordBot implements DiscordThreadService {
     this.client.on("interactionCreate", (interaction) => {
       void this.handleEvent(async () => {
         if (interaction.isChatInputCommand()) await this.deps.slashCommandRouter.handle(interaction);
+        if (interaction.isStringSelectMenu()) await this.deps.componentInteractionRouter.handle(interaction);
       }, async (error) => {
         if (interaction.isRepliable()) {
           const message = "Codex command 처리 중 오류가 발생했습니다.";

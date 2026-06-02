@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CodexSdkClientFactory } from "../../clients/codex/CodexSdkClientFactory.ts";
+import { LocalCodexRuntimeStatusClient } from "../../clients/codex/CodexRuntimeStatusClient.ts";
 import { EnvironmentConfigLoader } from "../../config/loader/EnvironmentConfigLoader.ts";
 import { WorkspaceConfigLoader } from "../../config/loader/WorkspaceConfigLoader.ts";
 import { CodexRuntimeEventBus } from "../../core/event/CodexRuntimeEventBus.ts";
@@ -16,6 +17,7 @@ import { SqliteCodexTurnRepository } from "../../store/thread/SqliteCodexTurnRep
 import { ConsoleLogger } from "../../telemetry/logging/ConsoleLogger.ts";
 import { redactSecrets } from "../../telemetry/logging/ConsoleLogger.ts";
 import { DiscordBot } from "../../transport/discord/DiscordBot.ts";
+import { DiscordComponentInteractionRouter } from "../../transport/discord/DiscordComponentInteractionRouter.ts";
 import { DiscordMentionMessageRouter } from "../../transport/discord/DiscordMentionMessageRouter.ts";
 import { DiscordMessageRenderer } from "../../transport/discord/DiscordMessageRenderer.ts";
 import { DiscordSlashCommandRouter } from "../../transport/discord/DiscordSlashCommandRouter.ts";
@@ -36,6 +38,7 @@ async function main(): Promise<void> {
   const runtimeEventRepository = new SqliteCodexRuntimeEventRepository(db);
   const eventBus = new CodexRuntimeEventBus();
   const codexSdkClient = new CodexSdkClientFactory(config.openaiApiKey, config.codexHome).create();
+  const codexRuntimeStatusClient = new LocalCodexRuntimeStatusClient(config.codexHome);
   const renderer = new DiscordMessageRenderer(`http://localhost:${config.httpPort}`);
   let discordBot: DiscordBot;
 
@@ -43,6 +46,7 @@ async function main(): Promise<void> {
     conversationRepository,
     turnRepository,
     debugBaseUrl: `http://localhost:${config.httpPort}`,
+    runtimeStatusProvider: codexRuntimeStatusClient,
     workspaceRegistry: new WorkspaceRegistry(workspaceConfig.workspaces),
     workspaceValidator: new WorkspaceValidator(),
     discordThreadService: {
@@ -65,6 +69,7 @@ async function main(): Promise<void> {
     applicationId: config.discordApplicationId,
     guildId: config.discordGuildId,
     slashCommandRouter: new DiscordSlashCommandRouter(conversationService, renderer),
+    componentInteractionRouter: new DiscordComponentInteractionRouter(conversationService, renderer),
     mentionMessageRouter: new DiscordMentionMessageRouter(runCodexTurnService, renderer),
     logger
   });

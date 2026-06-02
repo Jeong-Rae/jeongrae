@@ -47,23 +47,38 @@ test("message renderer uses spec text and truncates long final responses", () =>
 
 test("message renderer formats model config, status, and validation errors", () => {
   const renderer = new DiscordMessageRenderer("http://localhost:3000");
-  assert.equal(renderer.renderModelConfig({ model: null, reasoningEffort: null }), "현재 Codex model 설정\n\nModel: Codex CLI default\nEffort: Codex CLI default\n\n변경 예:\n/codex model model:gpt-5.5 effort:high\n\nEffort values: minimal, low, medium, high, xhigh");
-  assert.equal(renderer.renderModelConfigUpdated({ model: "gpt-5.5", reasoningEffort: "high" }), "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.");
+  assert.equal(renderer.renderModelConfigUpdated({
+    config: {
+      codexConversationId: "conv-1",
+      currentModel: "gpt-5.5",
+      currentModelUnavailableReason: null,
+      currentReasoningEffort: "high",
+      currentReasoningEffortUnavailableReason: null,
+      currentReasoningSummaries: "auto",
+      currentReasoningSummariesUnavailableReason: null,
+      modelOverride: "gpt-5.5",
+      reasoningEffortOverride: "high",
+      selectableModels: ["gpt-5.5"],
+      selectableEfforts: ["minimal", "low", "medium", "high", "xhigh"]
+    }
+  }), "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.");
   assert.equal(renderer.renderInvalidEffort(), "허용되지 않는 reasoning effort 값입니다.\n\nEffort values: minimal, low, medium, high, xhigh");
   assert.equal(renderer.renderInvalidModel(), "model 값은 비어 있을 수 없습니다.");
-  assert.match(renderer.renderStatus({
-    conversation: {
-      codexConversationId: "conv-1",
-      workspacePath: "/tmp/api",
-      workspaceSource: "absolute_path",
-      permissionMode: "default",
-      status: "idle",
-      model: null,
-      reasoningEffort: null
-    },
-    runningTurnCount: 0,
-    debugUrl: "http://localhost:3000/?conversation=conv-1"
-  }), /Debug: http:\/\/localhost:3000\/\?conversation=conv-1/);
+  assert.match(renderer.renderRuntimeStatus({
+    model: "gpt-5.5",
+    reasoningEffort: "high",
+    reasoningSummaries: "auto",
+    directory: "/tmp/api",
+    permissions: "On Request",
+    agentsMd: "/home/codespace/.codex/AGENTS.md",
+    accountEmail: "kkwjdfo@gmail.com",
+    accountPlan: "Plus",
+    collaborationMode: "Default",
+    sessionId: "conv-1",
+    contextWindow: { percentLeft: 57, usedTokens: 117000, totalTokens: 258000 },
+    fiveHourLimit: { percentLeft: 49, resetsAtText: "18:00" },
+    weeklyLimit: { percentLeft: 73, resetsAtText: "03:10 on 8 Jun" }
+  }), /Context window:\s+57% left \(117K used \/ 258K\)/);
 });
 
 test("codex slash command registers model and status subcommands", () => {
@@ -86,22 +101,41 @@ test("slash command router handles model and status with ephemeral replies", asy
         model: "gpt-5.5",
         reasoningEffort: "high"
       });
-      return { status: "updated", model: "gpt-5.5", reasoningEffort: "high" };
+      return {
+        status: "updated",
+        config: {
+          codexConversationId: "conv-1",
+          currentModel: "gpt-5.5",
+          currentModelUnavailableReason: null,
+          currentReasoningEffort: "high",
+          currentReasoningEffortUnavailableReason: null,
+          currentReasoningSummaries: "auto",
+          currentReasoningSummariesUnavailableReason: null,
+          modelOverride: "gpt-5.5",
+          reasoningEffortOverride: "high",
+          selectableModels: ["gpt-5.5"],
+          selectableEfforts: ["minimal", "low", "medium", "high", "xhigh"]
+        }
+      };
     },
     async getStatus() {
       return {
         status: "found",
-        conversation: {
-          codexConversationId: "conv-1",
-          workspacePath: "/tmp/api",
-          workspaceSource: "alias",
-          permissionMode: "default",
-          status: "idle",
+        runtimeStatus: {
           model: "gpt-5.5",
-          reasoningEffort: "high"
+          reasoningEffort: "high",
+          reasoningSummaries: "auto",
+          directory: "/tmp/api",
+          permissions: "On Request",
+          agentsMd: "/home/codespace/.codex/AGENTS.md",
+          accountEmail: "kkwjdfo@gmail.com",
+          accountPlan: "Plus",
+          collaborationMode: "Default",
+          sessionId: "conv-1",
+          contextWindow: { percentLeft: 57, usedTokens: 117000, totalTokens: 258000 },
+          fiveHourLimit: { percentLeft: 49, resetsAtText: "18:00" },
+          weeklyLimit: { percentLeft: 73, resetsAtText: "03:10 on 8 Jun" }
         },
-        runningTurnCount: 0,
-        debugUrl: "http://localhost:3000/?conversation=conv-1"
       };
     }
   } as never, new DiscordMessageRenderer("http://localhost:3000"));
@@ -129,7 +163,7 @@ test("slash command router handles model and status with ephemeral replies", asy
 
   assert.deepEqual(replies, [
     { content: "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.", ephemeral: true },
-    { content: "Codex 세션 상태\n\nWorkspace: /tmp/api\nSource: alias\nPermission: default\nStatus: idle\nRunning turns: 0\nModel: gpt-5.5\nEffort: high\n\nDebug: http://localhost:3000/?conversation=conv-1", ephemeral: true }
+    { content: "Codex Status\n\nModel:              gpt-5.5 (reasoning high, summaries auto)\nDirectory:          /tmp/api\nPermissions:        On Request\nAgents.md:          /home/codespace/.codex/AGENTS.md\nAccount:            kkwjdfo@gmail.com (Plus)\nCollaboration mode: Default\nSession:            conv-1\n\nContext window:     57% left (117K used / 258K)\n5h limit:           49% left (resets 18:00)\nWeekly limit:       73% left (resets 03:10 on 8 Jun)", ephemeral: true }
   ]);
 });
 

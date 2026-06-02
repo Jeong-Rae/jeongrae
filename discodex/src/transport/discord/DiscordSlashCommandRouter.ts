@@ -58,7 +58,7 @@ export class DiscordSlashCommandRouter {
         model: interaction.options.getString("model") ?? undefined,
         reasoningEffort: interaction.options.getString("effort") ?? undefined
       });
-      await interaction.reply({ content: this.renderModelResponse(response), ephemeral: true });
+      await interaction.reply({ ...this.renderModelResponse(response), ephemeral: true });
       return;
     }
 
@@ -67,17 +67,19 @@ export class DiscordSlashCommandRouter {
       await interaction.reply({
         content: response.status === "not_found"
           ? this.renderer.renderNoConversation()
-          : this.renderer.renderStatus(response),
+          : response.status === "status_unavailable"
+            ? this.renderer.renderStatusUnavailable(response)
+            : this.renderer.renderRuntimeStatus(response.runtimeStatus),
         ephemeral: true
       });
     }
   }
 
-  private renderModelResponse(response: Awaited<ReturnType<CodexConversationService["updateModelConfig"]>>): string {
-    if (response.status === "not_found") return this.renderer.renderNoConversation();
-    if (response.status === "invalid_effort") return this.renderer.renderInvalidEffort();
-    if (response.status === "invalid_model") return this.renderer.renderInvalidModel();
-    if (response.status === "updated") return this.renderer.renderModelConfigUpdated(response);
-    return this.renderer.renderModelConfig(response);
+  private renderModelResponse(response: Awaited<ReturnType<CodexConversationService["updateModelConfig"]>>) {
+    if (response.status === "not_found") return { content: this.renderer.renderNoConversation() };
+    if (response.status === "invalid_effort") return { content: this.renderer.renderInvalidEffort() };
+    if (response.status === "invalid_model") return { content: this.renderer.renderInvalidModel() };
+    if (response.status === "updated") return { content: this.renderer.renderModelConfigUpdated(response) };
+    return this.renderer.renderModelConfigInteractive(response.config);
   }
 }

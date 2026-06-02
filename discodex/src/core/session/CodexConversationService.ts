@@ -5,6 +5,8 @@ import type { CreateCodexConversationResponse } from "../../protocol/response/Cr
 import type { DiscordThreadService } from "../../transport/discord/DiscordThreadService.ts";
 import type { Logger } from "../../telemetry/logging/Logger.ts";
 import { isReasoningEffort, type ReasoningEffort } from "../model/ReasoningEffort.ts";
+import type { CodexEffectiveModelConfig, CodexRuntimeStatus } from "../status/CodexRuntimeStatus.ts";
+import type { CodexRuntimeStatusProvider } from "../status/CodexRuntimeStatusProvider.ts";
 import type { CodexTurnRepository } from "../turn/CodexTurnRepository.ts";
 import { createId } from "../../support/id/createId.ts";
 import { SystemClock } from "../../support/time/SystemClock.ts";
@@ -18,14 +20,15 @@ export type EnableYoloResponse =
   | { ok: false; message: string };
 
 export type ModelConfigResponse =
-  | { status: "found"; model: string | null; reasoningEffort: ReasoningEffort | null }
-  | { status: "updated"; model: string | null; reasoningEffort: ReasoningEffort | null }
+  | { status: "found"; config: CodexEffectiveModelConfig }
+  | { status: "updated"; config: CodexEffectiveModelConfig }
   | { status: "not_found" }
   | { status: "invalid_model" }
   | { status: "invalid_effort" };
 
 export type ConversationStatusResponse =
-  | { status: "found"; conversation: CodexConversation; runningTurnCount: number; debugUrl: string }
+  | { status: "found"; runtimeStatus: CodexRuntimeStatus }
+  | { status: "status_unavailable"; reason: string; sessionId: string }
   | { status: "not_found" };
 
 export class CodexConversationService {
@@ -35,6 +38,7 @@ export class CodexConversationService {
     conversationRepository: CodexConversationRepository;
     turnRepository?: CodexTurnRepository;
     debugBaseUrl?: string;
+    runtimeStatusProvider?: CodexRuntimeStatusProvider;
     workspaceRegistry: WorkspaceRegistry;
     workspaceValidator: WorkspaceValidator;
     discordThreadService: DiscordThreadService;
@@ -118,16 +122,13 @@ export class CodexConversationService {
   public async getModelConfig(discordGuildId: string, conversationChannelId: string): Promise<ModelConfigResponse> {
     const conversation = await this.deps.conversationRepository.findByChannel(discordGuildId, conversationChannelId);
     if (!conversation) return { status: "not_found" };
-    return {
-      status: "found",
-      model: conversation.model,
-      reasoningEffort: conversation.reasoningEffort
-    };
+    return { status: "found", config: await this.getEffectiveModelConfig(conversation) };
   }
 
   public async updateModelConfig(input: {
     discordGuildId: string;
-    conversationChannelId: string;
+    conversationChannelId?: string;
+    codexConversationId?: string;
     model?: string | null;
     reasoningEffort?: string | null;
   }): Promise<ModelConfigResponse> {
@@ -137,38 +138,80 @@ export class CodexConversationService {
     if (input.reasoningEffort !== undefined && input.reasoningEffort !== null && !isReasoningEffort(input.reasoningEffort)) {
       return { status: "invalid_effort" };
     }
+    const conversation = await this.findConversationForModelUpdate(input.discordGuildId, input.conversationChannelId, input.codexConversationId);
+    if (!conversation) return { status: "not_found" };
+
     if (input.model === undefined && input.reasoningEffort === undefined) {
-      return this.getModelConfig(input.discordGuildId, input.conversationChannelId);
+      return { status: "found", config: await this.getEffectiveModelConfig(conversation) };
     }
 
-    const conversation = await this.deps.conversationRepository.updateModelConfigByChannel({
+    const updated = await this.deps.conversationRepository.updateModelConfigByChannel({
       discordGuildId: input.discordGuildId,
-      conversationChannelId: input.conversationChannelId,
+      conversationChannelId: conversation.conversationChannelId,
       model: input.model === null ? undefined : input.model,
       reasoningEffort: input.reasoningEffort === null ? undefined : input.reasoningEffort,
       updatedAt: this.clock.now()
     });
-    if (!conversation) return { status: "not_found" };
-    return {
-      status: "updated",
-      model: conversation.model,
-      reasoningEffort: conversation.reasoningEffort
-    };
+    if (!updated) return { status: "not_found" };
+    return { status: "updated", config: await this.getEffectiveModelConfig(updated) };
   }
 
   public async getStatus(discordGuildId: string, conversationChannelId: string): Promise<ConversationStatusResponse> {
     const conversation = await this.deps.conversationRepository.findByChannel(discordGuildId, conversationChannelId);
     if (!conversation) return { status: "not_found" };
-    const runningTurnCount = await this.deps.turnRepository?.countRunningByConversation(conversation.codexConversationId) ?? 0;
-    return {
-      status: "found",
-      conversation,
-      runningTurnCount,
-      debugUrl: `${this.normalizedDebugBaseUrl()}/?conversation=${conversation.codexConversationId}`
-    };
+    const result = await this.getRuntimeStatusProvider().getStatus({
+      codexThreadId: conversation.codexThreadId,
+      workspacePath: conversation.workspacePath,
+      permissionMode: conversation.permissionMode,
+      modelOverride: conversation.model,
+      reasoningEffortOverride: conversation.reasoningEffort
+    });
+    if (!result.ok) return { status: "status_unavailable", reason: result.reason, sessionId: result.sessionId };
+    return { status: "found", runtimeStatus: result.status };
   }
 
-  private normalizedDebugBaseUrl(): string {
-    return (this.deps.debugBaseUrl ?? "http://localhost:3000").replace(/\/+$/, "");
+  private async findConversationForModelUpdate(discordGuildId: string, conversationChannelId?: string, codexConversationId?: string): Promise<CodexConversation | null> {
+    if (codexConversationId) {
+      const conversation = await this.deps.conversationRepository.findById(codexConversationId);
+      return conversation?.discordGuildId === discordGuildId ? conversation : null;
+    }
+    if (!conversationChannelId) return null;
+    return this.deps.conversationRepository.findByChannel(discordGuildId, conversationChannelId);
+  }
+
+  private async getEffectiveModelConfig(conversation: CodexConversation): Promise<CodexEffectiveModelConfig> {
+    return this.getRuntimeStatusProvider().getEffectiveModelConfig({
+      codexConversationId: conversation.codexConversationId,
+      codexThreadId: conversation.codexThreadId,
+      workspacePath: conversation.workspacePath,
+      permissionMode: conversation.permissionMode,
+      modelOverride: conversation.model,
+      reasoningEffortOverride: conversation.reasoningEffort
+    });
+  }
+
+  private getRuntimeStatusProvider(): CodexRuntimeStatusProvider {
+    return this.deps.runtimeStatusProvider ?? unavailableRuntimeStatusProvider;
   }
 }
+
+const unavailableRuntimeStatusProvider: CodexRuntimeStatusProvider = {
+  async getStatus(input) {
+    return { ok: false, reason: "Codex runtime status provider is not configured", sessionId: input.codexThreadId };
+  },
+  async getEffectiveModelConfig(input) {
+    return {
+      codexConversationId: input.codexConversationId,
+      currentModel: null,
+      currentModelUnavailableReason: "Codex runtime status provider is not configured",
+      currentReasoningEffort: null,
+      currentReasoningEffortUnavailableReason: "Codex runtime status provider is not configured",
+      currentReasoningSummaries: null,
+      currentReasoningSummariesUnavailableReason: "Codex runtime status provider is not configured",
+      modelOverride: input.modelOverride,
+      reasoningEffortOverride: input.reasoningEffortOverride,
+      selectableModels: [],
+      selectableEfforts: []
+    };
+  }
+};
