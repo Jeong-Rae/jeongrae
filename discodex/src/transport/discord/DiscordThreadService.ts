@@ -1,6 +1,7 @@
 export type CreatePrivateThreadInput = {
   parentChannelId: string;
   name: string;
+  createdByUserId: string;
 };
 
 export type CreatePrivateThreadOutput = {

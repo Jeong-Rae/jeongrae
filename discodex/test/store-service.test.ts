@@ -42,8 +42,10 @@ test("conversation service creates thread mapping and rejects invalid workspace"
   const store = await createStore();
   const workspace = await createGitWorkspace();
   let threadCounter = 0;
+  const privateThreadInputs: Array<{ parentChannelId: string; name: string; createdByUserId: string }> = [];
   const discordThreads: DiscordThreadService = {
-    async createPrivateThread() {
+    async createPrivateThread(input) {
+      privateThreadInputs.push(input);
       threadCounter += 1;
       return { threadId: `discord-thread-${threadCounter}` };
     }
@@ -76,6 +78,11 @@ test("conversation service creates thread mapping and rejects invalid workspace"
   assert.equal(created.conversation?.conversationChannelId, "discord-thread-1");
   assert.equal(created.conversation?.codexThreadId, "codex-thread-1");
   assert.equal(created.conversation?.workspaceSource, "alias");
+  assert.deepEqual(privateThreadInputs[0], {
+    parentChannelId: "parent-1",
+    name: "codex-api",
+    createdByUserId: "user-1"
+  });
 
   const absolute = await service.create({
     discordGuildId: "guild-1",

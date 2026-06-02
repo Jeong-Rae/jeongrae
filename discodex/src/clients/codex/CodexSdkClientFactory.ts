@@ -52,7 +52,7 @@ class OpenAiCodexSdkClient implements CodexSdkClient {
         approval_policy: permissionMode === "yolo" ? "never" : "on-request",
         sandbox_mode: permissionMode === "yolo" ? "danger-full-access" : "workspace-write"
       },
-      env: this.codexHome ? { ...process.env, CODEX_HOME: this.codexHome } as Record<string, string> : undefined
+      env: createCodexEnvironment(this.codexHome)
     });
   }
 
@@ -63,6 +63,15 @@ class OpenAiCodexSdkClient implements CodexSdkClient {
       sandboxMode: permissionMode === "yolo" ? "danger-full-access" : "workspace-write"
     };
   }
+}
+
+export function createCodexEnvironment(codexHome: string | undefined, baseEnv: NodeJS.ProcessEnv = process.env): Record<string, string> | undefined {
+  const normalizedCodexHome = codexHome?.trim();
+  if (!normalizedCodexHome) return undefined;
+  return {
+    ...Object.fromEntries(Object.entries(baseEnv).filter((entry): entry is [string, string] => entry[1] !== undefined)),
+    CODEX_HOME: normalizedCodexHome
+  };
 }
 
 function extractStreamErrorMessage(event: ThreadEvent): string {

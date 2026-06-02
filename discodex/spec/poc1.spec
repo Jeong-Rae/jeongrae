@@ -46,7 +46,7 @@ Codex resume 가능한 conversation 1개
 ```text
 1. 사용자는 /codex new <cwd> 명령으로 Codex 세션을 시작한다.
 2. 시스템은 <cwd> alias에 대응하는 local workspace를 선택한다.
-3. 시스템은 Discord thread를 생성한다.
+3. 시스템은 Discord private thread를 생성하고 요청한 사용자를 thread member로 추가한다.
 4. 시스템은 Codex SDK thread를 생성한다.
 5. 시스템은 Discord thread id와 Codex thread id를 저장한다.
 6. 사용자는 생성된 Discord thread 안에서 @CodexBot 메시지를 보낸다.
@@ -201,10 +201,12 @@ runtime/workspace
 3. workspace registry에서 workspaceKey에 대응하는 workspace를 조회한다.
 4. workspace path의 존재 여부와 git repository 여부를 검증한다.
 5. 현재 Discord channel 아래에 private thread를 생성한다.
-6. Codex SDK로 새 Codex thread를 생성한다.
-7. Discord thread id와 Codex thread id를 CodexConversation으로 저장한다.
-8. 생성된 Discord thread에 안내 메시지를 전송한다.
-9. Web Debug UI에서 새 conversation을 조회 가능하게 만든다.
+6. slash command를 요청한 사용자를 private thread member로 추가한다.
+7. Codex SDK로 새 Codex thread를 생성한다.
+8. Discord thread id와 Codex thread id를 CodexConversation으로 저장한다.
+9. slash command 응답에 생성된 Discord thread link를 표시한다.
+10. 생성된 Discord thread에 안내 메시지를 전송한다.
+11. Web Debug UI에서 새 conversation을 조회 가능하게 만든다.
 ```
 
 ---
@@ -336,9 +338,11 @@ Behavior:
 1. 시스템은 cwd 값을 workspace alias로 처리한다.
 2. 시스템은 workspace registry에서 alias를 조회한다.
 3. 시스템은 Discord private thread를 생성한다.
-4. 시스템은 Codex SDK thread를 생성한다.
-5. 시스템은 conversation mapping을 저장한다.
-6. 시스템은 생성된 thread에 사용 안내 메시지를 전송한다.
+4. 시스템은 slash command 요청자를 private thread member로 추가한다.
+5. 시스템은 Codex SDK thread를 생성한다.
+6. 시스템은 conversation mapping을 저장한다.
+7. 시스템은 slash command 응답에 생성된 Discord thread link를 표시한다.
+8. 시스템은 생성된 thread에 사용 안내 메시지를 전송한다.
 ```
 
 유효하지 않은 workspace alias 입력 시 Behavior:
@@ -354,10 +358,7 @@ Behavior:
 ```text
 api workspace에 대한 Codex 세션을 생성했습니다.
 
-이 thread에서 @CodexBot 으로 요청을 보내세요.
-
-예:
-@CodexBot 로그인 테스트 실패 원인 찾아줘
+Thread: https://discord.com/channels/<guildId>/<threadId>
 ```
 
 ---
@@ -922,7 +923,7 @@ Behavior:
 ```text
 1. workspace alias를 workspace path로 변환한다.
 2. workspace path를 검증한다.
-3. DiscordThreadService로 private thread를 생성한다.
+3. DiscordThreadService로 private thread를 생성하고 요청자를 member로 추가한다.
 4. CodexSdkClient로 Codex thread를 생성한다.
 5. CodexConversation을 저장한다.
 6. conversation status를 변경한다.
@@ -1173,7 +1174,9 @@ DISCORD_BOT_TOKEN=
 DISCORD_APPLICATION_ID=
 DISCORD_GUILD_ID=
 
-OPENAI_API_KEY=
+# Optional. 기본 인증은 local Codex CLI의 기존 로그인 상태를 사용한다.
+# API key 기반 Codex exec 실행이 필요할 때만 설정한다.
+# OPENAI_API_KEY=
 
 DATABASE_PATH=./data/codex-discord-agent.sqlite
 
@@ -1181,18 +1184,22 @@ HTTP_PORT=3000
 
 WORKSPACE_CONFIG_PATH=./config/workspaces.json
 
-CODEX_HOME=./data/codex-home
+# Optional. 생략하면 Codex CLI 기본 home, 보통 ~/.codex를 사용한다.
+# 전용 Codex home을 쓰려면 이미 존재하는 절대 경로를 설정한다.
+# CODEX_HOME=
 ```
 
 EnvironmentConfigLoader Behavior:
 
 ```text
 1. .env 파일을 로딩한다.
-2. required environment variable을 검증한다.
+2. Discord required environment variable을 검증한다.
 3. DATABASE_PATH 기본값을 적용한다.
 4. HTTP_PORT 기본값을 적용한다.
 5. WORKSPACE_CONFIG_PATH 기본값을 적용한다.
-6. CODEX_HOME 기본값을 적용한다.
+6. OPENAI_API_KEY가 없으면 undefined로 유지하여 local Codex CLI 인증 상태를 사용한다.
+7. CODEX_HOME이 없으면 undefined로 유지하여 Codex CLI 기본 home을 사용한다.
+8. CODEX_HOME이 있으면 Codex SDK 실행 env에만 주입한다.
 ```
 
 ---
@@ -1323,7 +1330,7 @@ Secret handling Behavior:
 
 ```text
 1. 시스템은 DISCORD_BOT_TOKEN 값을 로그 message에 포함할 때 redacted 값으로 표시한다.
-2. 시스템은 OPENAI_API_KEY 값을 로그 message에 포함할 때 redacted 값으로 표시한다.
+2. OPENAI_API_KEY가 설정된 경우 시스템은 해당 값을 로그 message에 포함할 때 redacted 값으로 표시한다.
 3. 시스템은 error object 출력 시 environment variable 값을 redacted 값으로 변환한다.
 ```
 
@@ -1524,12 +1531,15 @@ DISCORD_BOT_TOKEN=...
 DISCORD_APPLICATION_ID=...
 DISCORD_GUILD_ID=...
 
-OPENAI_API_KEY=...
-
 DATABASE_PATH=./data/codex-discord-agent.sqlite
 HTTP_PORT=3000
 WORKSPACE_CONFIG_PATH=./config/workspaces.json
-CODEX_HOME=./data/codex-home
+
+# Optional. API key 기반 실행이 필요한 경우에만 설정한다.
+# OPENAI_API_KEY=...
+
+# Optional. 생략하면 local Codex CLI 기본 home을 사용한다.
+# CODEX_HOME=/absolute/path/to/codex-home
 ```
 
 ---
@@ -1599,18 +1609,20 @@ http://localhost:3000
 
 ```text
 1. /codex new api 명령으로 Discord private thread가 생성된다.
-2. 생성된 Discord thread id가 conversationChannelId로 저장된다.
-3. Codex SDK thread id가 codexThreadId로 저장된다.
-4. Web Debug UI에서 conversation 목록을 확인할 수 있다.
-5. 생성된 Discord thread에서 @CodexBot 메시지를 보내면 Codex 응답을 받을 수 있다.
-6. 같은 Discord thread에서 두 번째 @CodexBot 메시지를 보내면 같은 codexThreadId를 사용한다.
-7. conversation.status가 running일 때 추가 요청은 진행 중 안내 메시지를 반환한다.
-8. /codex yolo 실행 시 현재 conversation의 permissionMode가 yolo로 변경된다.
-9. Web Debug UI에서 permissionMode = yolo 상태를 확인할 수 있다.
-10. Discord 응답 길이가 1800자를 초과할 때 축약 응답과 Web Debug UI 안내를 표시한다.
-11. 등록된 workspace alias를 기준으로 workspace를 선택한다.
-12. 등록된 workspace alias와 일치하는 값이 없을 때 사용 가능한 workspace 목록을 안내한다.
-13. DISCORD_BOT_TOKEN과 OPENAI_API_KEY는 로그에 redacted 값으로 표시된다.
+2. slash command 요청자가 생성된 private thread member로 추가된다.
+3. slash command 응답에 생성된 Discord thread link가 표시된다.
+4. 생성된 Discord thread id가 conversationChannelId로 저장된다.
+5. Codex SDK thread id가 codexThreadId로 저장된다.
+6. Web Debug UI에서 conversation 목록을 확인할 수 있다.
+7. 생성된 Discord thread에서 @CodexBot 메시지를 보내면 Codex 응답을 받을 수 있다.
+8. 같은 Discord thread에서 두 번째 @CodexBot 메시지를 보내면 같은 codexThreadId를 사용한다.
+9. conversation.status가 running일 때 추가 요청은 진행 중 안내 메시지를 반환한다.
+10. /codex yolo 실행 시 현재 conversation의 permissionMode가 yolo로 변경된다.
+11. Web Debug UI에서 permissionMode = yolo 상태를 확인할 수 있다.
+12. Discord 응답 길이가 1800자를 초과할 때 축약 응답과 Web Debug UI 안내를 표시한다.
+13. 등록된 workspace alias를 기준으로 workspace를 선택한다.
+14. 등록된 workspace alias와 일치하는 값이 없을 때 사용 가능한 workspace 목록을 안내한다.
+15. DISCORD_BOT_TOKEN과, 설정된 경우 OPENAI_API_KEY는 로그에 redacted 값으로 표시된다.
 ```
 
 ---

@@ -55,11 +55,29 @@ export class DiscordBot implements DiscordThreadService {
     if (!channel || !("threads" in channel)) {
       throw new Error(`Channel ${input.parentChannelId} cannot create threads.`);
     }
-    const thread = await (channel as TextBasedChannel & { threads: { create(input: { name: string; type: ChannelType.PrivateThread }): Promise<{ id: string }> } }).threads.create({
-      name: input.name,
-      type: ChannelType.PrivateThread
-    });
-    return { threadId: thread.id };
+    let thread: { id: string; members: { add(userId: string): Promise<unknown> } };
+    try {
+      thread = await (channel as TextBasedChannel & { threads: { create(input: { name: string; type: ChannelType.PrivateThread }): Promise<{ id: string; members: { add(userId: string): Promise<unknown> } }> } }).threads.create({
+        name: input.name,
+        type: ChannelType.PrivateThread
+      });
+      await thread.members.add(input.createdByUserId);
+      this.deps.logger.info("discord private thread created", {
+        eventType: "discord_private_thread_created",
+        parentChannelId: input.parentChannelId,
+        threadId: thread.id,
+        createdByUserId: input.createdByUserId
+      });
+      return { threadId: thread.id };
+    } catch (error) {
+      this.deps.logger.error("discord private thread creation failed", {
+        eventType: "discord_private_thread_creation_failed",
+        parentChannelId: input.parentChannelId,
+        createdByUserId: input.createdByUserId,
+        errorMessage: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
   }
 
   public async deleteThread(threadId: string): Promise<void> {

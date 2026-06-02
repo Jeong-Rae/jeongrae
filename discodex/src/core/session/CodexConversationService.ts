@@ -38,7 +38,8 @@ export class CodexConversationService {
 
     const thread = await this.deps.discordThreadService.createPrivateThread({
       parentChannelId: request.parentChannelId,
-      name: `codex-${workspace.workspaceKey}`
+      name: `codex-${workspace.workspaceKey}`,
+      createdByUserId: request.createdBy
     });
     try {
       const codexThread = await this.deps.codexSdkClient.startThread({

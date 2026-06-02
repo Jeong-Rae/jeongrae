@@ -17,6 +17,10 @@ export class DiscordMessageRenderer {
     return `Codex 세션이 생성되었습니다.\n\n${workspaceLine}\nSource: ${input.workspaceSource}\nMode: ${input.permissionMode}\n\n이 thread에서 @CodexBot 으로 요청하세요.\n\n예:\n@CodexBot 이 프로젝트 구조를 요약해줘`;
   }
 
+  public renderConversationCreatedReply(workspaceKey: string, guildId: string, threadId: string): string {
+    return `${workspaceKey} workspace에 대한 Codex 세션을 생성했습니다.\n\nThread: https://discord.com/channels/${guildId}/${threadId}`;
+  }
+
   public renderRunStarted(): string {
     return "Codex 작업을 시작했습니다.";
   }

@@ -29,6 +29,10 @@ test("discord text helper removes bot mention and trims message", () => {
 test("message renderer uses spec text and truncates long final responses", () => {
   const renderer = new DiscordMessageRenderer("http://localhost:3000");
   assert.match(renderer.renderConversationCreated({ workspaceKey: "api", workspacePath: "/tmp/api", workspaceSource: "alias", permissionMode: "default" }), /Source: alias/);
+  assert.equal(
+    renderer.renderConversationCreatedReply("api", "guild-1", "thread-1"),
+    "api workspace에 대한 Codex 세션을 생성했습니다.\n\nThread: https://discord.com/channels/guild-1/thread-1"
+  );
   assert.match(renderer.renderYoloEnabled(), /현재 Codex 세션이 yolo mode로 전환되었습니다/);
 
   const long = "a".repeat(1900);

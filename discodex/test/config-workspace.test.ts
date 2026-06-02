@@ -4,17 +4,38 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createCodexEnvironment } from "../src/clients/codex/CodexSdkClientFactory.ts";
 import { EnvironmentConfigLoader } from "../src/config/loader/EnvironmentConfigLoader.ts";
 import { WorkspaceConfigLoader } from "../src/config/loader/WorkspaceConfigLoader.ts";
 import { WorkspaceRegistry } from "../src/runtime/workspace/WorkspaceRegistry.ts";
 import { WorkspaceValidator } from "../src/runtime/workspace/WorkspaceValidator.ts";
 
-test("environment loader validates required values and applies defaults", () => {
+test("environment loader validates required values and applies defaults without Codex auth overrides", () => {
+  const loader = new EnvironmentConfigLoader({
+    DISCORD_BOT_TOKEN: "discord-token",
+    DISCORD_APPLICATION_ID: "app-id",
+    DISCORD_GUILD_ID: "guild-id"
+  });
+
+  assert.deepEqual(loader.load(), {
+    discordBotToken: "discord-token",
+    discordApplicationId: "app-id",
+    discordGuildId: "guild-id",
+    openaiApiKey: undefined,
+    databasePath: "./data/codex-discord-agent.sqlite",
+    httpPort: 3000,
+    workspaceConfigPath: "./config/workspaces.json",
+    codexHome: undefined
+  });
+});
+
+test("environment loader preserves optional Codex auth overrides when provided", () => {
   const loader = new EnvironmentConfigLoader({
     DISCORD_BOT_TOKEN: "discord-token",
     DISCORD_APPLICATION_ID: "app-id",
     DISCORD_GUILD_ID: "guild-id",
-    OPENAI_API_KEY: "openai-key"
+    OPENAI_API_KEY: "openai-key",
+    CODEX_HOME: "/tmp/codex-home"
   });
 
   assert.deepEqual(loader.load(), {
@@ -25,7 +46,16 @@ test("environment loader validates required values and applies defaults", () => 
     databasePath: "./data/codex-discord-agent.sqlite",
     httpPort: 3000,
     workspaceConfigPath: "./config/workspaces.json",
-    codexHome: "./data/codex-home"
+    codexHome: "/tmp/codex-home"
+  });
+});
+
+test("Codex SDK environment is only overridden when CODEX_HOME is explicit", () => {
+  assert.equal(createCodexEnvironment(undefined), undefined);
+  assert.equal(createCodexEnvironment(""), undefined);
+  assert.deepEqual(createCodexEnvironment("/tmp/codex-home", { PATH: "/bin" }), {
+    PATH: "/bin",
+    CODEX_HOME: "/tmp/codex-home"
   });
 });
 

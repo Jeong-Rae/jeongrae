@@ -25,7 +25,11 @@ export class DiscordSlashCommandRouter {
         await interaction.editReply(this.renderer.renderInvalidWorkspace(created.availableWorkspaceKeys));
         return;
       }
-      await interaction.editReply(`${created.conversation.workspaceKey} workspace에 대한 Codex 세션을 생성했습니다.`);
+      await interaction.editReply(this.renderer.renderConversationCreatedReply(
+        created.conversation.workspaceKey,
+        created.conversation.discordGuildId,
+        created.conversation.conversationChannelId
+      ));
       const channel = await interaction.client.channels.fetch(created.conversation.conversationChannelId);
       if (channel?.isSendable()) {
         await channel.send(this.renderer.renderConversationCreated({

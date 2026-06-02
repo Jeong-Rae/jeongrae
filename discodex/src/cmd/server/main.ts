@@ -26,7 +26,7 @@ import { CodexRuntimeEventSseController } from "../../transport/sse/CodexRuntime
 
 async function main(): Promise<void> {
   const config = new EnvironmentConfigLoader().load();
-  const logger = new ConsoleLogger([config.discordBotToken, config.openaiApiKey]);
+  const logger = new ConsoleLogger([config.discordBotToken, config.openaiApiKey ?? ""]);
   const workspaceConfig = new WorkspaceConfigLoader(config.workspaceConfigPath).load();
   const db = new SqliteConnectionFactory(config.databasePath).create();
   new MigrationRunner(db).run();
