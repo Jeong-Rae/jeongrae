@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { DiscordMessageText } from "../src/support/text/DiscordMessageText.ts";
 import { DiscordMessageRenderer } from "../src/transport/discord/DiscordMessageRenderer.ts";
+import { DiscordMentionMessageRouter } from "../src/transport/discord/DiscordMentionMessageRouter.ts";
 import { ConsoleLogger, redactSecrets } from "../src/telemetry/logging/ConsoleLogger.ts";
 import { CodexRuntimeEventBus } from "../src/core/event/CodexRuntimeEventBus.ts";
 import { SqliteConnectionFactory } from "../src/store/connection/SqliteConnectionFactory.ts";
@@ -34,11 +35,46 @@ test("message renderer uses spec text and truncates long final responses", () =>
     "api workspace에 대한 Codex 세션을 생성했습니다.\n\nThread: https://discord.com/channels/guild-1/thread-1"
   );
   assert.match(renderer.renderYoloEnabled(), /현재 Codex 세션이 yolo mode로 전환되었습니다/);
+  assert.equal(renderer.renderRunSucceeded("actual response", "conv-1"), "actual response");
 
   const long = "a".repeat(1900);
   const rendered = renderer.renderRunSucceeded(long, "conv-1");
   assert.ok(rendered.length <= 1800);
   assert.match(rendered, /Web Debug UI/);
+});
+
+test("mention router edits loading message to final Codex response", async () => {
+  const sent: string[] = [];
+  const edits: string[] = [];
+  const router = new DiscordMentionMessageRouter({
+    async run() {
+      return {
+        status: "succeeded",
+        codexConversationId: "conv-1",
+        codexTurnId: "turn-1",
+        finalResponse: "actual response"
+      };
+    }
+  } as never, new DiscordMessageRenderer("http://localhost:3000"));
+
+  await router.handle({
+    author: { bot: false, id: "user-1" },
+    client: { user: { id: "bot-1" } },
+    mentions: { users: { has: (id: string) => id === "bot-1" } },
+    channel: {
+      isSendable: () => true,
+      send: async (content: string) => {
+        sent.push(content);
+        return { edit: async (updated: string) => { edits.push(updated); } };
+      }
+    },
+    content: "<@bot-1> do it",
+    guildId: "guild-1",
+    channelId: "channel-1"
+  } as never);
+
+  assert.deepEqual(sent, ["Codex 작업을 시작했습니다."]);
+  assert.deepEqual(edits, ["actual response"]);
 });
 
 test("runtime event bus publishes conversation events", () => {

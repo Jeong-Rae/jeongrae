@@ -233,7 +233,7 @@ runtime/workspace
 9. Codex runtime event를 저장한다.
 10. runtime event를 Web Debug UI로 전파한다.
 11. Codex final response를 CodexTurn에 저장한다.
-12. Codex final response를 Discord thread에 출력한다.
+12. RunStarted 메시지를 Codex final response로 수정한다.
 13. conversation 상태를 idle로 전환한다.
 ```
 
@@ -427,7 +427,7 @@ Behavior:
 4. 시스템은 CodexTurn을 생성한다.
 5. 시스템은 Codex SDK로 기존 thread를 resume한다.
 6. 시스템은 userMessage를 Codex에 전달한다.
-7. 시스템은 Codex 응답을 Discord에 출력한다.
+7. 시스템은 RunStarted 메시지를 Codex 응답으로 수정한다.
 8. 시스템은 Web Debug UI에 turn 결과를 표시한다.
 ```
 
@@ -905,7 +905,7 @@ Behavior:
 5. RunCodexTurnRequest를 생성한다.
 6. RunCodexTurnService.run을 호출한다.
 7. RunStarted 메시지를 Discord에 출력한다.
-8. RunSucceeded 또는 RunFailed 메시지를 Discord에 출력한다.
+8. RunSucceeded 또는 RunFailed 결과로 RunStarted 메시지를 수정한다.
 ```
 
 ---
@@ -1228,13 +1228,14 @@ Mode: default
 Codex 작업을 시작했습니다.
 ```
 
+RunStarted 메시지는 임시 loading 메시지이다.
+Codex turn이 완료되면 시스템은 새 메시지를 추가로 보내지 않고 이 메시지를 RunSucceeded 또는 RunFailed 내용으로 수정한다.
+
 ---
 
 ### 17.3 Run Succeeded
 
 ```text
-Codex 응답
-
 {finalResponse}
 ```
 

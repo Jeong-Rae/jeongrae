@@ -26,11 +26,11 @@ export class DiscordMentionMessageRouter {
     });
 
     if (result.status === "succeeded") {
-      await message.channel.send(this.renderer.renderRunSucceeded(result.finalResponse, result.codexConversationId));
+      await started.edit(this.renderer.renderRunSucceeded(result.finalResponse, result.codexConversationId));
       return;
     }
     if (result.status === "failed") {
-      await message.channel.send(this.renderer.renderRunFailed(result.errorMessage));
+      await started.edit(this.renderer.renderRunFailed(result.errorMessage));
       return;
     }
     await started.edit(result.message);

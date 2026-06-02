@@ -26,11 +26,9 @@ export class DiscordMessageRenderer {
   }
 
   public renderRunSucceeded(finalResponse: string, codexConversationId: string): string {
-    const header = "Codex 응답\n\n";
-    const full = `${header}${finalResponse}`;
-    if (full.length <= DISCORD_LIMIT) return full;
+    if (finalResponse.length <= DISCORD_LIMIT) return finalResponse;
     const suffix = `\n\n응답이 길어 앞부분만 표시합니다. 전체 응답은 Web Debug UI에서 확인하세요.\n${this.debugBaseUrl}/?conversation=${codexConversationId}`;
-    return `${header}${finalResponse.slice(0, DISCORD_LIMIT - header.length - suffix.length)}${suffix}`;
+    return `${finalResponse.slice(0, DISCORD_LIMIT - suffix.length)}${suffix}`;
   }
 
   public renderRunFailed(errorMessage: string): string {
