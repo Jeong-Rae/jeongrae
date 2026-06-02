@@ -11,6 +11,7 @@ type ConversationRow = {
   conversation_channel_id: string;
   workspace_key: string;
   workspace_path: string;
+  workspace_source: "absolute_path" | "alias";
   codex_thread_id: string;
   status: CodexConversationStatus;
   permission_mode: PermissionMode;
@@ -27,6 +28,7 @@ function toRow(conversation: CodexConversation): Record<string, string> {
     conversation_channel_id: conversation.conversationChannelId,
     workspace_key: conversation.workspaceKey,
     workspace_path: conversation.workspacePath,
+    workspace_source: conversation.workspaceSource,
     codex_thread_id: conversation.codexThreadId,
     status: conversation.status,
     permission_mode: conversation.permissionMode,
@@ -44,6 +46,7 @@ function fromRow(row: ConversationRow): CodexConversation {
     conversationChannelId: row.conversation_channel_id,
     workspaceKey: row.workspace_key,
     workspacePath: row.workspace_path,
+    workspaceSource: row.workspace_source,
     codexThreadId: row.codex_thread_id,
     status: row.status,
     permissionMode: row.permission_mode,
@@ -60,10 +63,10 @@ export class SqliteCodexConversationRepository implements CodexConversationRepos
     this.db.prepare(`
       INSERT INTO codex_conversation (
         codex_conversation_id, discord_guild_id, parent_channel_id, conversation_channel_id,
-        workspace_key, workspace_path, codex_thread_id, status, permission_mode, created_by, created_at, updated_at
+        workspace_key, workspace_path, workspace_source, codex_thread_id, status, permission_mode, created_by, created_at, updated_at
       ) VALUES (
         @codex_conversation_id, @discord_guild_id, @parent_channel_id, @conversation_channel_id,
-        @workspace_key, @workspace_path, @codex_thread_id, @status, @permission_mode, @created_by, @created_at, @updated_at
+        @workspace_key, @workspace_path, @workspace_source, @codex_thread_id, @status, @permission_mode, @created_by, @created_at, @updated_at
       )
     `).run(toRow(conversation));
   }

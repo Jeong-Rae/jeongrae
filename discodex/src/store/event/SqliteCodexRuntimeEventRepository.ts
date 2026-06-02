@@ -5,7 +5,7 @@ import type { CodexRuntimeEvent } from "../../core/event/CodexRuntimeEvent.ts";
 type EventRow = {
   codex_runtime_event_id: string;
   codex_conversation_id: string;
-  codex_turn_id: string | null;
+  codex_turn_id: string;
   event_type: string;
   payload_json: string;
   created_at: string;

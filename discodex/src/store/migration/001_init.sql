@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS codex_conversation (
 
   workspace_key TEXT NOT NULL,
   workspace_path TEXT NOT NULL,
+  workspace_source TEXT NOT NULL,
 
   codex_thread_id TEXT NOT NULL,
 

@@ -13,12 +13,12 @@ export class DiscordSlashCommandRouter {
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === "new") {
-      const workspaceKey = interaction.options.getString("cwd", true);
+      const cwd = interaction.options.getString("cwd", true);
       await interaction.deferReply({ ephemeral: true });
       const created = await this.conversationService.create({
         discordGuildId: interaction.guildId ?? "",
         parentChannelId: interaction.channelId,
-        workspaceKey,
+        cwd,
         createdBy: interaction.user.id
       });
       if (!created.ok) {
@@ -28,7 +28,12 @@ export class DiscordSlashCommandRouter {
       await interaction.editReply(`${created.conversation.workspaceKey} workspace에 대한 Codex 세션을 생성했습니다.`);
       const channel = await interaction.client.channels.fetch(created.conversation.conversationChannelId);
       if (channel?.isSendable()) {
-        await channel.send(this.renderer.renderConversationCreated(created.conversation.workspaceKey, created.conversation.permissionMode));
+        await channel.send(this.renderer.renderConversationCreated({
+          workspaceKey: created.conversation.workspaceKey,
+          workspacePath: created.conversation.workspacePath,
+          workspaceSource: created.conversation.workspaceSource,
+          permissionMode: created.conversation.permissionMode
+        }));
       }
       return;
     }

@@ -27,11 +27,11 @@ export class CodexConversationService {
   }) {}
 
   public async create(request: CreateCodexConversationRequest): Promise<CreateCodexConversationResponse> {
-    const workspace = this.deps.workspaceRegistry.get(request.workspaceKey);
+    const workspace = this.deps.workspaceRegistry.resolve(request.cwd);
     if (!workspace) {
       return { ok: false, reason: "workspace_not_found", availableWorkspaceKeys: this.deps.workspaceRegistry.listAvailableKeys() };
     }
-    const validation = this.deps.workspaceValidator.validate(workspace.absolutePath);
+    const validation = this.deps.workspaceValidator.validate(workspace.workspacePath);
     if (!validation.ok) {
       return { ok: false, reason: validation.reason, availableWorkspaceKeys: this.deps.workspaceRegistry.listAvailableKeys() };
     }
@@ -53,6 +53,7 @@ export class CodexConversationService {
         conversationChannelId: thread.threadId,
         workspaceKey: workspace.workspaceKey,
         workspacePath: validation.workspacePath,
+        workspaceSource: workspace.source,
         codexThreadId: codexThread.codexThreadId,
         status: "idle" as const,
         permissionMode: "default" as const,
@@ -64,7 +65,8 @@ export class CodexConversationService {
       this.deps.logger?.info("conversation created", {
         eventType: "conversation_created",
         codexConversationId: conversation.codexConversationId,
-        workspaceKey: conversation.workspaceKey
+        workspaceKey: conversation.workspaceKey,
+        workspaceSource: conversation.workspaceSource
       });
       return { ok: true, conversation };
     } catch (error) {

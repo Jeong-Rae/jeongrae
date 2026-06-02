@@ -41,9 +41,11 @@ async function createGitWorkspace() {
 test("conversation service creates thread mapping and rejects invalid workspace", async () => {
   const store = await createStore();
   const workspace = await createGitWorkspace();
+  let threadCounter = 0;
   const discordThreads: DiscordThreadService = {
     async createPrivateThread() {
-      return { threadId: "discord-thread-1" };
+      threadCounter += 1;
+      return { threadId: `discord-thread-${threadCounter}` };
     }
   };
   const codex: CodexSdkClient = {
@@ -67,17 +69,28 @@ test("conversation service creates thread mapping and rejects invalid workspace"
   const created = await service.create({
     discordGuildId: "guild-1",
     parentChannelId: "parent-1",
-    workspaceKey: "api",
+    cwd: "api",
     createdBy: "user-1"
   });
   assert.equal(created.ok, true);
   assert.equal(created.conversation?.conversationChannelId, "discord-thread-1");
   assert.equal(created.conversation?.codexThreadId, "codex-thread-1");
+  assert.equal(created.conversation?.workspaceSource, "alias");
+
+  const absolute = await service.create({
+    discordGuildId: "guild-1",
+    parentChannelId: "parent-1",
+    cwd: workspace,
+    createdBy: "user-1"
+  });
+  assert.equal(absolute.ok, true);
+  assert.equal(absolute.conversation?.workspaceSource, "absolute_path");
+  assert.equal(absolute.conversation?.workspacePath, workspace);
 
   const invalid = await service.create({
     discordGuildId: "guild-1",
     parentChannelId: "parent-1",
-    workspaceKey: "missing",
+    cwd: "missing",
     createdBy: "user-1"
   });
   assert.equal(invalid.ok, false);
@@ -118,7 +131,7 @@ test("conversation service deletes created discord thread when downstream creati
     () => service.create({
       discordGuildId: "guild-1",
       parentChannelId: "parent-1",
-      workspaceKey: "api",
+      cwd: "api",
       createdBy: "user-1"
     }),
     /codex unavailable/
@@ -128,7 +141,7 @@ test("conversation service deletes created discord thread when downstream creati
 });
 
 
-test("repositories persist turns/events and enforce running compare-and-set", async () => {
+test("repositories persist turns/events and expose running turn count", async () => {
   const store = await createStore();
   const now = new Date("2026-06-01T00:00:00.000Z");
   await store.conversations.create({
@@ -138,6 +151,7 @@ test("repositories persist turns/events and enforce running compare-and-set", as
     conversationChannelId: "channel-1",
     workspaceKey: "api",
     workspacePath: "/tmp/api",
+    workspaceSource: "alias",
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
@@ -146,9 +160,7 @@ test("repositories persist turns/events and enforce running compare-and-set", as
     updatedAt: now
   });
 
-  assert.equal(await store.conversations.tryMarkRunning("conv-1", now), true);
-  assert.equal(await store.conversations.tryMarkRunning("conv-1", now), false);
-  await store.conversations.updateStatus("conv-1", "idle", now);
+  await store.conversations.updateStatus("conv-1", "running", now);
   await store.conversations.updatePermissionModeByChannel("guild-1", "channel-1", "yolo", now);
 
   await store.turns.create({
@@ -174,11 +186,12 @@ test("repositories persist turns/events and enforce running compare-and-set", as
   });
 
   assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.permissionMode, "yolo");
+  assert.equal(await store.turns.countRunningByConversation("conv-1"), 0);
   assert.equal((await store.turns.listByConversation("conv-1"))[0]?.finalResponse, "final");
   assert.equal((await store.events.listByConversation("conv-1"))[0]?.eventType, "turn.completed");
 });
 
-test("run service resumes same codex thread, blocks concurrent turns, and restores idle on failure", async () => {
+test("run service resumes same codex thread, allows concurrent turns, and restores display status on failure", async () => {
   const store = await createStore();
   const now = new Date("2026-06-01T00:00:00.000Z");
   await store.conversations.create({
@@ -188,6 +201,7 @@ test("run service resumes same codex thread, blocks concurrent turns, and restor
     conversationChannelId: "channel-1",
     workspaceKey: "api",
     workspacePath: "/tmp/api",
+    workspaceSource: "alias",
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
@@ -242,15 +256,15 @@ test("run service resumes same codex thread, blocks concurrent turns, and restor
   });
   assert.equal(streamFailed.status, "failed");
 
-  await store.conversations.tryMarkRunning("conv-1", now);
-  const blocked = await service.run({
+  await store.conversations.updateStatus("conv-1", "running", now);
+  const concurrent = await service.run({
     discordGuildId: "guild-1",
     conversationChannelId: "channel-1",
     requestedBy: "user-1",
     userMessage: "second"
   });
-  assert.equal(blocked.status, "busy");
-  await store.conversations.updateStatus("conv-1", "idle", now);
+  assert.equal(concurrent.status, "succeeded");
+  assert.equal(concurrent.finalResponse, "answer:second");
 
   const failed = await service.run({
     discordGuildId: "guild-1",
@@ -260,7 +274,7 @@ test("run service resumes same codex thread, blocks concurrent turns, and restor
   });
   assert.equal(failed.status, "failed");
   assert.equal((await store.conversations.findByChannel("guild-1", "channel-1"))?.status, "idle");
-  assert.deepEqual(runInputs, ["codex-thread-1", "codex-thread-1", "codex-thread-1"]);
+  assert.deepEqual(runInputs, ["codex-thread-1", "codex-thread-1", "codex-thread-1", "codex-thread-1"]);
   assert.equal(
     (await store.events.listByConversation("conv-1")).some((event) => event.eventType === "item.completed"),
     true
@@ -281,6 +295,7 @@ test("run service restores conversation idle when turn creation fails", async ()
     conversationChannelId: "channel-1",
     workspaceKey: "api",
     workspacePath: "/tmp/api",
+    workspaceSource: "alias",
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
@@ -298,7 +313,10 @@ test("run service restores conversation idle when turn creation fails", async ()
         return [];
       },
       async markSucceeded() {},
-      async markFailed() {}
+      async markFailed() {},
+      async countRunningByConversation() {
+        return 0;
+      }
     },
     runtimeEventRepository: store.events,
     eventBus: new CodexRuntimeEventBus(),
@@ -333,6 +351,7 @@ test("run service marks failed turn before swallowing failed event persistence",
     conversationChannelId: "channel-1",
     workspaceKey: "api",
     workspacePath: "/tmp/api",
+    workspaceSource: "alias",
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",

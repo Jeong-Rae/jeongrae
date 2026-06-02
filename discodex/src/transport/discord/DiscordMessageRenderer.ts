@@ -5,8 +5,16 @@ const DISCORD_LIMIT = 1800;
 export class DiscordMessageRenderer {
   public constructor(private readonly debugBaseUrl: string) {}
 
-  public renderConversationCreated(workspaceKey: string, permissionMode: PermissionMode): string {
-    return `Codex 세션이 생성되었습니다.\n\nWorkspace: ${workspaceKey}\nMode: ${permissionMode}\n\n이 thread에서 @CodexBot 으로 요청하세요.\n\n예:\n@CodexBot 로그인 테스트 실패 원인 찾아줘`;
+  public renderConversationCreated(input: {
+    workspaceKey: string;
+    workspacePath: string;
+    workspaceSource: "absolute_path" | "alias";
+    permissionMode: PermissionMode;
+  }): string {
+    const workspaceLine = input.workspaceSource === "absolute_path"
+      ? `Workspace: ${input.workspacePath}`
+      : `Workspace: ${input.workspaceKey}\nPath: ${input.workspacePath}`;
+    return `Codex 세션이 생성되었습니다.\n\n${workspaceLine}\nSource: ${input.workspaceSource}\nMode: ${input.permissionMode}\n\n이 thread에서 @CodexBot 으로 요청하세요.\n\n예:\n@CodexBot 이 프로젝트 구조를 요약해줘`;
   }
 
   public renderRunStarted(): string {
@@ -33,9 +41,6 @@ export class DiscordMessageRenderer {
     return "이 channel에는 연결된 Codex 세션이 없습니다.\n\n먼저 다음 명령으로 세션을 생성하세요.\n/codex new <cwd>";
   }
 
-  public renderBusy(): string {
-    return "현재 이 Codex 세션에서 작업이 진행 중입니다.\n완료 후 다시 요청해주세요.";
-  }
 
   public renderInvalidWorkspace(availableKeys: string[]): string {
     return `등록된 workspace alias와 일치하지 않습니다.\n\n사용 가능한 workspace:\n${availableKeys.join(", ") || "(none)"}`;

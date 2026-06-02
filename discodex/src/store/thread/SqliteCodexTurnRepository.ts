@@ -58,6 +58,11 @@ export class SqliteCodexTurnRepository implements CodexTurnRepository {
     return this.db.prepare("SELECT * FROM codex_turn WHERE codex_conversation_id = ? ORDER BY created_at ASC").all(codexConversationId).map((row: unknown) => fromRow(row as TurnRow));
   }
 
+  public async countRunningByConversation(codexConversationId: string): Promise<number> {
+    const row = this.db.prepare("SELECT COUNT(*) AS count FROM codex_turn WHERE codex_conversation_id = ? AND status = 'running'").get(codexConversationId) as { count: number };
+    return row.count;
+  }
+
   public async markSucceeded(codexTurnId: string, finalResponse: string, finishedAt: Date): Promise<void> {
     this.db.prepare("UPDATE codex_turn SET status = 'succeeded', final_response = ?, finished_at = ? WHERE codex_turn_id = ?").run(finalResponse, finishedAt.toISOString(), codexTurnId);
   }

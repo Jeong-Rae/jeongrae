@@ -29,7 +29,7 @@ test("environment loader validates required values and applies defaults", () => 
   });
 });
 
-test("workspace registry exposes only enabled aliases", () => {
+test("workspace registry resolves aliases and absolute paths", () => {
   const registry = new WorkspaceRegistry([
     { workspaceKey: "api", displayName: "API", absolutePath: "/repo/api", enabled: true },
     { workspaceKey: "web", displayName: "Web", absolutePath: "/repo/web", enabled: false }
@@ -37,6 +37,8 @@ test("workspace registry exposes only enabled aliases", () => {
 
   assert.equal(registry.get("api")?.workspaceKey, "api");
   assert.equal(registry.get("web"), null);
+  assert.deepEqual(registry.resolve("api"), { workspaceKey: "api", displayName: "API", workspacePath: "/repo/api", source: "alias" });
+  assert.deepEqual(registry.resolve("/repo/api"), { workspaceKey: "path_repo_api", displayName: "api", workspacePath: "/repo/api", source: "absolute_path" });
   assert.deepEqual(registry.listAvailableKeys(), ["api"]);
 });
 
@@ -53,23 +55,12 @@ test("workspace config loader parses workspaces json", async () => {
   assert.equal(loader.load().workspaces[0]?.workspaceKey, "api");
 });
 
-test("workspace validator requires directory and .git directory", async () => {
+test("workspace validator requires an existing directory", async () => {
   const dir = await mkdtemp(join(tmpdir(), "workspace-validator-"));
   const workspace = join(dir, "api");
   mkdirSync(workspace);
 
   const validator = new WorkspaceValidator();
-  assert.equal(validator.validate(workspace).ok, false);
-
-  mkdirSync(join(workspace, ".git"));
   assert.deepEqual(validator.validate(workspace), { ok: true, workspacePath: workspace });
-});
-
-test("workspace validator accepts git worktree git file", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "workspace-validator-file-"));
-  const workspace = join(dir, "api");
-  mkdirSync(workspace);
-  writeFileSync(join(workspace, ".git"), "gitdir: /tmp/git-dir\n");
-
-  assert.deepEqual(new WorkspaceValidator().validate(workspace), { ok: true, workspacePath: workspace });
+  assert.equal(validator.validate(join(dir, "missing")).ok, false);
 });

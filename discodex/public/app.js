@@ -11,7 +11,7 @@ async function fetchJson(url) {
 
 function renderConversationButton(conversation) {
   const button = document.createElement("button");
-  button.textContent = `${conversation.workspaceKey} ${conversation.status} ${conversation.permissionMode}`;
+  button.textContent = `${conversation.workspaceKey} ${conversation.status} running:${conversation.runningTurnCount} ${conversation.permissionMode}`;
   button.addEventListener("click", () => selectConversation(conversation.codexConversationId));
   return button;
 }
@@ -33,18 +33,33 @@ async function selectConversation(id) {
   detail.innerHTML = "";
   const conversation = conversationData.conversation;
   detail.append(Object.assign(document.createElement("h2"), { textContent: conversation.workspaceKey }));
+  detail.append(Object.assign(document.createElement("p"), { textContent: `Workspace source: ${conversation.workspaceSource}` }));
+  detail.append(Object.assign(document.createElement("p"), { textContent: `Workspace path: ${conversation.workspacePath}` }));
   detail.append(Object.assign(document.createElement("p"), { textContent: `Codex thread: ${conversation.codexThreadId}` }));
   detail.append(Object.assign(document.createElement("p"), { textContent: `Discord channel: ${conversation.conversationChannelId}` }));
   detail.append(Object.assign(document.createElement("p"), { textContent: `Status: ${conversation.status}` }));
+  detail.append(Object.assign(document.createElement("p"), { textContent: `Running turns: ${conversation.runningTurnCount}` }));
   detail.append(Object.assign(document.createElement("p"), { textContent: `Permission: ${conversation.permissionMode}` }));
   turns.textContent = JSON.stringify(turnData.turns, null, 2);
-  events.textContent = JSON.stringify(eventData.events, null, 2);
+  events.textContent = JSON.stringify(groupEventsByTurn(eventData.events), null, 2);
   currentSource = new EventSource(`/api/conversations/${id}/events/stream`);
   currentSource.addEventListener("codex-runtime-event", (event) => {
-    const current = events.textContent ? JSON.parse(events.textContent) : [];
-    current.push(JSON.parse(event.data));
-    events.textContent = JSON.stringify(current, null, 2);
+    const grouped = events.textContent ? JSON.parse(events.textContent) : {};
+    const runtimeEvent = JSON.parse(event.data);
+    const key = runtimeEvent.codexTurnId || "conversation";
+    grouped[key] = grouped[key] || [];
+    grouped[key].push(runtimeEvent);
+    events.textContent = JSON.stringify(grouped, null, 2);
   });
+}
+
+function groupEventsByTurn(runtimeEvents) {
+  return runtimeEvents.reduce((grouped, event) => {
+    const key = event.codexTurnId || "conversation";
+    grouped[key] = grouped[key] || [];
+    grouped[key].push(event);
+    return grouped;
+  }, {});
 }
 
 loadConversations().catch((error) => {

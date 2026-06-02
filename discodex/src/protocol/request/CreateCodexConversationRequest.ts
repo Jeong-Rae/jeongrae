@@ -1,6 +1,6 @@
 export type CreateCodexConversationRequest = {
   discordGuildId: string;
   parentChannelId: string;
-  workspaceKey: string;
+  cwd: string;
   createdBy: string;
 };

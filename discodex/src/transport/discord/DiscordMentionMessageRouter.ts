@@ -33,10 +33,6 @@ export class DiscordMentionMessageRouter {
       await message.channel.send(this.renderer.renderRunFailed(result.errorMessage));
       return;
     }
-    if (result.status === "busy") {
-      await started.edit(result.message);
-      return;
-    }
     await started.edit(result.message);
   }
 }

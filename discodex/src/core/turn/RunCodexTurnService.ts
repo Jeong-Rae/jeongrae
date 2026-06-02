@@ -10,8 +10,6 @@ import type { Logger } from "../../telemetry/logging/Logger.ts";
 import { CodexSdkStreamError } from "../../clients/codex/CodexSdkClient.ts";
 import type { CodexTurnRepository } from "./CodexTurnRepository.ts";
 
-const BUSY_MESSAGE = "현재 이 Codex 세션에서 작업이 진행 중입니다.\n완료 후 다시 요청해주세요.";
-
 export class RunCodexTurnService {
   private readonly clock = new SystemClock();
 
@@ -30,11 +28,6 @@ export class RunCodexTurnService {
       return { status: "not_found", message: "이 channel에는 연결된 Codex 세션이 없습니다.\n\n먼저 다음 명령으로 세션을 생성하세요.\n/codex new <cwd>" };
     }
     const now = this.clock.now();
-    const marked = await this.deps.conversationRepository.tryMarkRunning(conversation.codexConversationId, now);
-    if (!marked) {
-      return { status: "busy", message: BUSY_MESSAGE };
-    }
-
     const turnId = createId("turn");
     let turnCreated = false;
 
@@ -52,6 +45,7 @@ export class RunCodexTurnService {
         finishedAt: null
       });
       turnCreated = true;
+      await this.deps.conversationRepository.updateStatus(conversation.codexConversationId, "running", now);
       this.deps.logger?.info("codex turn started", {
         eventType: "codex_turn_started",
         codexConversationId: conversation.codexConversationId,
@@ -77,7 +71,7 @@ export class RunCodexTurnService {
         codexTurnId: turnId,
         workspaceKey: conversation.workspaceKey
       });
-      await this.deps.conversationRepository.updateStatus(conversation.codexConversationId, "idle", finishedAt);
+      await this.updateConversationDisplayStatus(conversation.codexConversationId, finishedAt);
       return { status: "succeeded", codexConversationId: conversation.codexConversationId, codexTurnId: turnId, finalResponse: output.finalResponse };
     } catch (error) {
       const finishedAt = this.clock.now();
@@ -109,13 +103,18 @@ export class RunCodexTurnService {
           errorMessage
         });
       } finally {
-        await this.deps.conversationRepository.updateStatus(conversation.codexConversationId, "idle", finishedAt);
+        await this.updateConversationDisplayStatus(conversation.codexConversationId, finishedAt);
       }
       return { status: "failed", codexConversationId: conversation.codexConversationId, codexTurnId: turnId, errorMessage };
     }
   }
 
-  private async persistEvent(codexConversationId: string, codexTurnId: string | null, eventType: string, payload: unknown): Promise<void> {
+  private async updateConversationDisplayStatus(codexConversationId: string, updatedAt: Date): Promise<void> {
+    const runningTurnCount = await this.deps.turnRepository.countRunningByConversation(codexConversationId);
+    await this.deps.conversationRepository.updateStatus(codexConversationId, runningTurnCount > 0 ? "running" : "idle", updatedAt);
+  }
+
+  private async persistEvent(codexConversationId: string, codexTurnId: string, eventType: string, payload: unknown): Promise<void> {
     const event = {
       codexRuntimeEventId: createId("event"),
       codexConversationId,

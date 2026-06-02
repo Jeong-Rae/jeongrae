@@ -3,7 +3,7 @@ import type { CodexConversationId, CodexTurnId } from "../session/CodexConversat
 export type CodexRuntimeEvent = {
   codexRuntimeEventId: string;
   codexConversationId: CodexConversationId;
-  codexTurnId: CodexTurnId | null;
+  codexTurnId: CodexTurnId;
   eventType: string;
   payloadJson: string;
   createdAt: Date;

@@ -11,6 +11,7 @@ export type CodexTurnId = string;
 
 export type WorkspaceKey = string;
 export type WorkspacePath = string;
+export type WorkspaceSource = "absolute_path" | "alias";
 
 export type CodexConversation = {
   codexConversationId: CodexConversationId;
@@ -19,6 +20,7 @@ export type CodexConversation = {
   conversationChannelId: DiscordChannelId;
   workspaceKey: WorkspaceKey;
   workspacePath: WorkspacePath;
+  workspaceSource: WorkspaceSource;
   codexThreadId: CodexThreadId;
   status: CodexConversationStatus;
   permissionMode: PermissionMode;

@@ -28,7 +28,7 @@ test("discord text helper removes bot mention and trims message", () => {
 
 test("message renderer uses spec text and truncates long final responses", () => {
   const renderer = new DiscordMessageRenderer("http://localhost:3000");
-  assert.match(renderer.renderConversationCreated("api", "default"), /Codex 세션이 생성되었습니다/);
+  assert.match(renderer.renderConversationCreated({ workspaceKey: "api", workspacePath: "/tmp/api", workspaceSource: "alias", permissionMode: "default" }), /Source: alias/);
   assert.match(renderer.renderYoloEnabled(), /현재 Codex 세션이 yolo mode로 전환되었습니다/);
 
   const long = "a".repeat(1900);
@@ -44,7 +44,7 @@ test("runtime event bus publishes conversation events", () => {
   bus.publish({
     codexRuntimeEventId: "event-1",
     codexConversationId: "conv-1",
-    codexTurnId: null,
+    codexTurnId: "turn-1",
     eventType: "codex_turn_started",
     payloadJson: "{}",
     createdAt: new Date("2026-06-01T00:00:00.000Z")
@@ -85,6 +85,7 @@ test("debug http server exposes conversation APIs and event stream", async () =>
     conversationChannelId: "channel-1",
     workspaceKey: "api",
     workspacePath: "/tmp/api",
+    workspaceSource: "alias",
     codexThreadId: "codex-thread-1",
     status: "idle",
     permissionMode: "default",
@@ -121,13 +122,15 @@ test("debug http server exposes conversation APIs and event stream", async () =>
     const { port } = server.address() as AddressInfo;
     const baseUrl = `http://127.0.0.1:${port}`;
     const list = await (await fetch(`${baseUrl}/api/conversations`)).json() as { conversations: Array<{ codexConversationId: string }> };
-    const detail = await (await fetch(`${baseUrl}/api/conversations/conv-1`)).json() as { conversation: { codexThreadId: string } };
+    const detail = await (await fetch(`${baseUrl}/api/conversations/conv-1`)).json() as { conversation: { codexThreadId: string; runningTurnCount: number; workspaceSource: string } };
     const turnList = await (await fetch(`${baseUrl}/api/conversations/conv-1/turns`)).json() as { turns: Array<{ finalResponse: string | null }> };
     const abort = new AbortController();
     const stream = await fetch(`${baseUrl}/api/conversations/conv-1/events/stream`, { signal: abort.signal });
 
     assert.equal(list.conversations[0]?.codexConversationId, "conv-1");
     assert.equal(detail.conversation.codexThreadId, "codex-thread-1");
+    assert.equal(detail.conversation.workspaceSource, "alias");
+    assert.equal(detail.conversation.runningTurnCount, 0);
     assert.equal(turnList.turns[0]?.finalResponse, "world");
     eventBus.publish({
       codexRuntimeEventId: "event-1",

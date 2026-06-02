@@ -1,7 +1,9 @@
 import type { Express, Request, Response } from "express";
+import type { CodexConversation } from "../../core/session/CodexConversation.ts";
 import type { CodexConversationRepository } from "../../core/session/CodexConversationRepository.ts";
 import type { CodexTurnRepository } from "../../core/turn/CodexTurnRepository.ts";
 import type { CodexRuntimeEventRepository } from "../../core/event/CodexRuntimeEventRepository.ts";
+import type { CodexConversationResponse } from "../../protocol/response/CodexConversationResponse.ts";
 
 export class CodexConversationController {
   public constructor(private readonly deps: {
@@ -18,7 +20,8 @@ export class CodexConversationController {
   }
 
   private listConversations = async (_request: Request, response: Response) => {
-    response.json({ conversations: await this.deps.conversationRepository.list() });
+    const conversations = await Promise.all((await this.deps.conversationRepository.list()).map((conversation) => this.toResponse(conversation)));
+    response.json({ conversations });
   };
 
   private getConversation = async (request: Request, response: Response) => {
@@ -27,7 +30,7 @@ export class CodexConversationController {
       response.status(404).json({ error: "conversation_not_found" });
       return;
     }
-    response.json({ conversation });
+    response.json({ conversation: await this.toResponse(conversation) });
   };
 
   private listTurns = async (request: Request, response: Response) => {
@@ -37,4 +40,21 @@ export class CodexConversationController {
   private listEvents = async (request: Request, response: Response) => {
     response.json({ events: await this.deps.runtimeEventRepository.listByConversation(String(request.params.codexConversationId ?? "")) });
   };
+
+  private async toResponse(conversation: CodexConversation): Promise<CodexConversationResponse> {
+    const runningTurnCount = await this.deps.turnRepository.countRunningByConversation(conversation.codexConversationId);
+    return {
+      codexConversationId: conversation.codexConversationId,
+      workspaceKey: conversation.workspaceKey,
+      workspacePath: conversation.workspacePath,
+      workspaceSource: conversation.workspaceSource,
+      conversationChannelId: conversation.conversationChannelId,
+      codexThreadId: conversation.codexThreadId,
+      status: conversation.status === "closed" ? "closed" : runningTurnCount > 0 ? "running" : "idle",
+      permissionMode: conversation.permissionMode,
+      runningTurnCount,
+      createdAt: conversation.createdAt.toISOString(),
+      updatedAt: conversation.updatedAt.toISOString()
+    };
+  }
 }
