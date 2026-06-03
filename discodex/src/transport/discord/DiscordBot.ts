@@ -1,4 +1,4 @@
-import { ChannelType, Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, type TextBasedChannel } from "discord.js";
+import { ChannelType, Client, GatewayIntentBits, MessageFlags, REST, Routes, SlashCommandBuilder, type TextBasedChannel } from "discord.js";
 import type { Logger } from "../../telemetry/logging/Logger.ts";
 import { REASONING_EFFORT_VALUES } from "../../core/model/ReasoningEffort.ts";
 import type { DiscordSlashCommandRouter } from "./DiscordSlashCommandRouter.ts";
@@ -35,8 +35,8 @@ export class DiscordBot implements DiscordThreadService {
       }, async (error) => {
         if (interaction.isRepliable()) {
           const message = "Codex command 처리 중 오류가 발생했습니다.";
-          if (interaction.deferred || interaction.replied) await interaction.followUp({ content: message, ephemeral: true });
-          else await interaction.reply({ content: message, ephemeral: true });
+          if (interaction.deferred || interaction.replied) await interaction.followUp({ content: message, flags: MessageFlags.Ephemeral });
+          else await interaction.reply({ content: message, flags: MessageFlags.Ephemeral });
         }
         this.logEventError("discord_interaction_failed", error);
       });

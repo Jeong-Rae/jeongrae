@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { MessageFlags } from "discord.js";
 import { DiscordMessageText } from "../src/support/text/DiscordMessageText.ts";
 import { buildCodexSlashCommand } from "../src/transport/discord/DiscordBot.ts";
 import { DiscordMessageRenderer } from "../src/transport/discord/DiscordMessageRenderer.ts";
@@ -93,6 +94,8 @@ test("codex slash command registers model and status subcommands", () => {
 
 test("slash command router handles model and status with ephemeral replies", async () => {
   const replies: unknown[] = [];
+  const deferred: unknown[] = [];
+  const edits: unknown[] = [];
   const router = new DiscordSlashCommandRouter({
     async updateModelConfig(input: unknown) {
       assert.deepEqual(input, {
@@ -158,12 +161,16 @@ test("slash command router handles model and status with ephemeral replies", asy
       getSubcommand: () => "status",
       getString: () => null
     },
-    reply: async (payload: unknown) => { replies.push(payload); }
+    deferReply: async (payload: unknown) => { deferred.push(payload); },
+    editReply: async (payload: unknown) => { edits.push(payload); }
   } as never);
 
   assert.deepEqual(replies, [
-    { content: "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.", ephemeral: true },
-    { content: "Codex Status\n\nModel:              gpt-5.5 (reasoning high, summaries auto)\nDirectory:          /tmp/api\nPermissions:        On Request\nAgents.md:          /home/codespace/.codex/AGENTS.md\nAccount:            kkwjdfo@gmail.com (Plus)\nCollaboration mode: Default\nSession:            conv-1\n\nContext window:     57% left (117K used / 258K)\n5h limit:           49% left (resets 18:00)\nWeekly limit:       73% left (resets 03:10 on 8 Jun)", ephemeral: true }
+    { content: "Codex model 설정을 변경했습니다.\n\nModel: gpt-5.5\nEffort: high\n\n다음 Codex turn부터 적용됩니다.", flags: MessageFlags.Ephemeral }
+  ]);
+  assert.deepEqual(deferred, [{ flags: MessageFlags.Ephemeral }]);
+  assert.deepEqual(edits, [
+    { content: "Codex Status\n\nModel:              gpt-5.5 (reasoning high, summaries auto)\nDirectory:          /tmp/api\nPermissions:        On Request\nAgents.md:          /home/codespace/.codex/AGENTS.md\nAccount:            kkwjdfo@gmail.com (Plus)\nCollaboration mode: Default\nSession:            conv-1\n\nContext window:     57% left (117K used / 258K)\n5h limit:           49% left (resets 18:00)\nWeekly limit:       73% left (resets 03:10 on 8 Jun)" }
   ]);
 });
 

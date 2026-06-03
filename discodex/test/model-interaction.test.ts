@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { MessageFlags } from "discord.js";
 import { DiscordMessageRenderer } from "../src/transport/discord/DiscordMessageRenderer.ts";
 import { DiscordSlashCommandRouter } from "../src/transport/discord/DiscordSlashCommandRouter.ts";
 import { DiscordComponentInteractionRouter } from "../src/transport/discord/DiscordComponentInteractionRouter.ts";
@@ -74,8 +75,8 @@ test("slash command without model arguments returns interactive ephemeral payloa
     reply: async (payload: unknown) => { replies.push(payload); }
   } as never);
 
-  const reply = replies[0] as { content: string; ephemeral: boolean; components: unknown[] };
-  assert.equal(reply.ephemeral, true);
+  const reply = replies[0] as { content: string; flags: number; components: unknown[] };
+  assert.equal(reply.flags, MessageFlags.Ephemeral);
   assert.match(reply.content, /Current model: gpt-5\.5/);
   assert.equal(reply.components.length, 2);
 });
@@ -124,6 +125,6 @@ test("component router stores selected model and effort values", async () => {
     { discordGuildId: "guild-1", codexConversationId: "conv-1", model: "gpt-5.5" },
     { discordGuildId: "guild-1", codexConversationId: "conv-1", reasoningEffort: "high" }
   ]);
-  assert.equal((replies[0] as { ephemeral: boolean }).ephemeral, true);
-  assert.equal((replies[1] as { ephemeral: boolean }).ephemeral, true);
+  assert.equal((replies[0] as { flags: number }).flags, MessageFlags.Ephemeral);
+  assert.equal((replies[1] as { flags: number }).flags, MessageFlags.Ephemeral);
 });

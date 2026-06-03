@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { DiscordMessageRenderer } from "../src/transport/discord/DiscordMessageRenderer.ts";
 import { CodexConversationService } from "../src/core/session/CodexConversationService.ts";
+import { LocalCodexRuntimeStatusClient } from "../src/clients/codex/CodexRuntimeStatusClient.ts";
 import type { CodexConversation } from "../src/core/session/CodexConversation.ts";
 import type { CodexRuntimeStatusProvider } from "../src/core/status/CodexRuntimeStatusProvider.ts";
 
@@ -154,4 +155,68 @@ test("renderer formats runtime status unavailable response", () => {
     }),
     "Codex status를 조회할 수 없습니다.\n\nReason: Codex CLI session metadata not found\nSession: codex-thread-1"
   );
+});
+
+test("local runtime status client maps Codex app-server rate limits into 5h and weekly limits", async () => {
+  const client = new LocalCodexRuntimeStatusClient("/tmp/missing-codex-home", ["gpt-5.5"], {
+    now: () => new Date("2026-06-03T00:00:00.000Z"),
+    appServerRpcClient: {
+      async getAccountRateLimits() {
+        return {
+          rateLimits: {
+            limitId: "codex",
+            limitName: null,
+            primary: {
+              usedPercent: 11,
+              windowDurationMins: 300,
+              resetsAt: Date.parse("2026-06-03T18:00:00.000Z") / 1000
+            },
+            secondary: {
+              usedPercent: 37,
+              windowDurationMins: 10080,
+              resetsAt: Date.parse("2026-06-08T03:10:00.000Z") / 1000
+            },
+            credits: { hasCredits: false, unlimited: false, balance: "0" },
+            planType: "plus",
+            rateLimitReachedType: null
+          },
+          rateLimitsByLimitId: {}
+        };
+      },
+      async getThreadTokenUsage() {
+        return {
+          total: {
+            totalTokens: 130000,
+            inputTokens: 120000,
+            cachedInputTokens: 10000,
+            outputTokens: 10000,
+            reasoningOutputTokens: 0
+          },
+          last: {
+            totalTokens: 117000,
+            inputTokens: 110000,
+            cachedInputTokens: 10000,
+            outputTokens: 7000,
+            reasoningOutputTokens: 0
+          },
+          modelContextWindow: 258000
+        };
+      }
+    }
+  });
+
+  const result = await client.getStatus({
+    codexThreadId: "session-1",
+    workspacePath: "/workspaces/jeongrae/discodex",
+    permissionMode: "yolo",
+    modelOverride: "gpt-5.5",
+    reasoningEffortOverride: "high"
+  });
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.status.contextWindow, { percentLeft: 57, usedTokens: 117000, totalTokens: 258000 });
+    assert.deepEqual(result.status.fiveHourLimit, { percentLeft: 89, resetsAtText: "18:00" });
+    assert.deepEqual(result.status.weeklyLimit, { percentLeft: 63, resetsAtText: "03:10 on 8 Jun" });
+  }
 });

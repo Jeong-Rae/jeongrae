@@ -1,4 +1,4 @@
-import type { StringSelectMenuInteraction } from "discord.js";
+import { MessageFlags, type StringSelectMenuInteraction } from "discord.js";
 import type { CodexConversationService } from "../../core/session/CodexConversationService.ts";
 import { DiscordMessageRenderer } from "./DiscordMessageRenderer.ts";
 
@@ -23,7 +23,7 @@ export class DiscordComponentInteractionRouter {
 
     await interaction.reply({
       ...this.renderModelResponse(response),
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 

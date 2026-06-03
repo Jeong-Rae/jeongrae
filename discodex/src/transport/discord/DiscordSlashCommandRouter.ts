@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction } from "discord.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 import type { CodexConversationService } from "../../core/session/CodexConversationService.ts";
 import { DiscordMessageRenderer } from "./DiscordMessageRenderer.ts";
 
@@ -14,7 +14,7 @@ export class DiscordSlashCommandRouter {
 
     if (subcommand === "new") {
       const cwd = interaction.options.getString("cwd", true);
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const created = await this.conversationService.create({
         discordGuildId: interaction.guildId ?? "",
         parentChannelId: interaction.channelId,
@@ -47,7 +47,7 @@ export class DiscordSlashCommandRouter {
         discordGuildId: interaction.guildId ?? "",
         conversationChannelId: interaction.channelId
       });
-      await interaction.reply({ content: response.ok ? this.renderer.renderYoloEnabled() : response.message, ephemeral: true });
+      await interaction.reply({ content: response.ok ? this.renderer.renderYoloEnabled() : response.message, flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -58,20 +58,21 @@ export class DiscordSlashCommandRouter {
         model: interaction.options.getString("model") ?? undefined,
         reasoningEffort: interaction.options.getString("effort") ?? undefined
       });
-      await interaction.reply({ ...this.renderModelResponse(response), ephemeral: true });
+      await interaction.reply({ ...this.renderModelResponse(response), flags: MessageFlags.Ephemeral });
       return;
     }
 
     if (subcommand === "status") {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const response = await this.conversationService.getStatus(interaction.guildId ?? "", interaction.channelId);
-      await interaction.reply({
+      await interaction.editReply({
         content: response.status === "not_found"
           ? this.renderer.renderNoConversation()
           : response.status === "status_unavailable"
             ? this.renderer.renderStatusUnavailable(response)
-            : this.renderer.renderRuntimeStatus(response.runtimeStatus),
-        ephemeral: true
+            : this.renderer.renderRuntimeStatus(response.runtimeStatus)
       });
+      return;
     }
   }
 
